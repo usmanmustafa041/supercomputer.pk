@@ -72,6 +72,28 @@ export default function Configurator({
    */
   const [pane, setPane] = useState<"build" | "view" | "checks">("build");
 
+  /** Slot whose conflict explanation is open. At most one at a time. */
+  const [openConflict, setOpenConflict] = useState<Kind | null>(null);
+
+  /**
+   * Anything else you touch closes the explanation.
+   *
+   * Listening on the document in the capture phase means it dismisses on any
+   * interaction — including taps that land on other buttons — while the badge
+   * and the popover itself stop propagation so they are not self-closing.
+   */
+  useEffect(() => {
+    if (!openConflict) return;
+    const close = () => setOpenConflict(null);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    document.addEventListener("pointerdown", close);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [openConflict]);
+
   // Clear the ceiling notice a few seconds after it appears.
   useEffect(() => {
     if (!capHit) return;
@@ -395,9 +417,13 @@ export default function Configurator({
             </div>
 
             <div className="divide-y divide-[var(--line)] max-h-[46rem] overflow-y-auto">
-              {slots.map((slot) => {
+              {slots.map((slot, slotIndex) => {
                 const picked = byKind.get(slot.kind) ?? [];
                 const flagged = picked.some((l) => errorIds.includes(l.product.id));
+                /** The findings behind this slot's badge, shown when it is tapped. */
+                const slotFindings = findings.filter(
+                  (f) => f.severity === "error" && picked.some((l) => f.refs.includes(l.product.id))
+                );
 
                 return (
                   <section key={slot.kind}>
@@ -420,7 +446,58 @@ export default function Configurator({
                         </span>
                         <h2 className="text-[12.5px] font-medium">{slot.label}</h2>
                         {slot.core && picked.length === 0 && <span className="pill">required</span>}
-                        {flagged && <span className="pill pill-err">conflict</span>}
+
+                        {/* The badge explains itself in place. On a phone the
+                            validation pane is a tab away, so naming the problem
+                            where it is flagged saves a round trip. */}
+                        {flagged && (
+                          <span className="relative shrink-0">
+                            <button
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenConflict(openConflict === slot.kind ? null : slot.kind);
+                              }}
+                              aria-expanded={openConflict === slot.kind}
+                              aria-label={`Why ${slot.label.toLowerCase()} conflicts`}
+                              className="pill pill-err cursor-pointer"
+                            >
+                              conflict
+                              <span aria-hidden className="ml-0.5 opacity-70">
+                                {openConflict === slot.kind ? "×" : "?"}
+                              </span>
+                            </button>
+
+                            {openConflict === slot.kind && (
+                              <span
+                                role="dialog"
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
+                                /* The parts list is a scroll container, so it clips. Slots
+                   near the bottom open upward rather than off the edge. */
+                className={`pop absolute left-0 z-30 block w-[15rem] max-w-[calc(100vw-3rem)] panel-raised p-2.5 space-y-2 normal-case tracking-normal ${
+                  slotIndex > slots.length - 4 ? "bottom-[calc(100%+6px)]" : "top-[calc(100%+6px)]"
+                }`}
+                              >
+                                {slotFindings.map((f, i) => (
+                                  <span key={i} className="block">
+                                    <span className="block text-[11.5px] font-medium leading-snug text-ink">
+                                      {f.title}
+                                    </span>
+                                    <span className="block text-[11px] text-ink-1 leading-relaxed mt-0.5">
+                                      {f.detail}
+                                    </span>
+                                    {f.fix && (
+                                      <span className="block text-[11px] text-cool leading-relaxed mt-0.5">
+                                        → {f.fix}
+                                      </span>
+                                    )}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </span>
+                        )}
                       </div>
                       <button onClick={() => setPicking(slot)} className="btn btn-ghost btn-sm shrink-0">
                         {picked.length ? "Add" : "Select"}
