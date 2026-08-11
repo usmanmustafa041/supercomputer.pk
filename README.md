@@ -59,6 +59,32 @@ catalog is correctly typed VPI rather than InfiniBand-only.
 
 `/rules` documents every rule for customers, with its id.
 
+## The 3D builder
+
+`/configure` renders the build as a to-scale 3D scene (three.js via react-three-fiber). Orbit, zoom, pan;
+drag a slot from the parts list into the case; click a part to isolate and label it.
+
+There is no model library. Every box is generated from the catalog's own millimetre figures — card length,
+slot thickness at the 20.32mm PCIe pitch, cooler height, board form factor, PSU depth, chassis clearance,
+rack U. **The geometry is the compatibility data.** A card 30mm longer than the case clearance is drawn
+30mm too long, turns red and visibly punches through the panel, rather than only producing a line of text.
+
+That is a deliberate trade against BuildCores-style photoreal models: I can't license 5,000 GLTF assets, but
+generated geometry is always exactly as accurate as the spec sheet and covers all 2,777 SKUs on day one.
+
+`npm run layout:dump "<ids>"` prints the placement table for a build, which is how the orientation and
+mirroring bugs below were found.
+
+Three things that bit me, all visible only once rendered:
+
+- Chassis space runs z front-to-back, but three's +z faces the viewer, so the first version rendered the
+  case backwards with the PSU in your face.
+- Metallic surfaces take the colour of the light hitting them. A cyan rim light turned the dark grey PSU
+  cyan. Metalness is now deliberately low.
+- Parts started at `scale 0.001` and grew via `useFrame`. Any throttled or backgrounded frame loop left
+  the entire build invisible. Position and scale are now declared on the mesh; the frame loop only adds
+  the hover lift.
+
 ## Sourcing
 
 Resolution order is our own stock, then our import channel, then Pakistani retailers.
