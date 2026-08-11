@@ -45,16 +45,19 @@
 /* ---------------------------------------------------------- dark (default) */
 
 :root {
-  --c-void: #050608;
-  --c-base: #08090C;
-  --c-surface: #0C0E12;
-  --c-raised: #12151A;
-  --c-overlay: #181C23;
+  /* Surface ramp. Each step is a visible jump, not a rounding difference —
+     the first pass put four levels inside 3% luminance and everything merged
+     into one flat field. */
+  --c-void: #050609;
+  --c-base: #0B0D12;
+  --c-surface: #14171D;
+  --c-raised: #1D212A;
+  --c-overlay: #262B35;
 
   --c-ink: #EDEFF2;
-  --c-ink-1: #9DA5B0;
-  --c-ink-2: #6A727E;
-  --c-ink-3: #454C57;
+  --c-ink-1: #A3ABB6;
+  --c-ink-2: #757D8A;
+  --c-ink-3: #515966;
 
   --c-acc: #FF5A1F;
   --c-acc-hot: #FF7A45;
@@ -66,11 +69,21 @@
   --c-warn: #FFB020;
   --c-err: #FF4D4D;
 
-  --line: rgb(255 255 255 / 0.07);
-  --line-mid: rgb(255 255 255 / 0.12);
-  --line-hi: rgb(255 255 255 / 0.22);
-  --wash: rgb(255 255 255 / 0.05);
-  --wash-2: rgb(255 255 255 / 0.015);
+  --line: rgb(255 255 255 / 0.10);
+  --line-mid: rgb(255 255 255 / 0.17);
+  --line-hi: rgb(255 255 255 / 0.30);
+  --wash: rgb(255 255 255 / 0.06);
+  --wash-2: rgb(255 255 255 / 0.02);
+
+  /* The rig and the build viewport get their own ramp. Borrowing the generic
+     surface tokens made the rack cavity, uprights and node faces land within a
+     shade of each other. */
+  --rig-shell: #040507;
+  --rig-rail: #2E3542;
+  --rig-node: #1B2029;
+  --rig-node-hot: #2B1D14;
+  --rig-bay: #0A0C11;
+  --rig-line: rgb(255 255 255 / 0.28);
 
   /* Depth cues for the pseudo-3D viewport. */
   --lift-1: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 12px 32px -18px rgb(0 0 0 / 0.9);
@@ -98,16 +111,18 @@
 /* ------------------------------------------------------------------ light */
 
 :root[data-theme="light"] {
-  --c-void: #FBFBFC;
-  --c-base: #F4F5F7;
+  /* The page is grey so white panels read as raised objects sitting on it.
+     A white page under white cards is what made everything merge. */
+  --c-void: #EDEFF3;
+  --c-base: #DFE3E9;
   --c-surface: #FFFFFF;
-  --c-raised: #F7F8FA;
+  --c-raised: #F6F7FA;
   --c-overlay: #FFFFFF;
 
   --c-ink: #0B0D11;
-  --c-ink-1: #4B535F;
-  --c-ink-2: #6B7481;
-  --c-ink-3: #98A0AC;
+  --c-ink-1: #454D59;
+  --c-ink-2: #626A77;
+  --c-ink-3: #8A93A0;
 
   /* Pure #FF5A1F fails contrast as text on white, so the accent darkens
      while the fill colour it is used against stays the same hue. */
@@ -120,11 +135,18 @@
   --c-warn: #8A5A00;
   --c-err: #C42121;
 
-  --line: rgb(11 13 17 / 0.10);
-  --line-mid: rgb(11 13 17 / 0.16);
-  --line-hi: rgb(11 13 17 / 0.30);
-  --wash: rgb(11 13 17 / 0.045);
-  --wash-2: rgb(11 13 17 / 0.02);
+  --line: rgb(11 13 17 / 0.13);
+  --line-mid: rgb(11 13 17 / 0.21);
+  --line-hi: rgb(11 13 17 / 0.38);
+  --wash: rgb(11 13 17 / 0.05);
+  --wash-2: rgb(11 13 17 / 0.022);
+
+  --rig-shell: #D3D8E0;
+  --rig-rail: #A8B0BC;
+  --rig-node: #FFFFFF;
+  --rig-node-hot: #FFEEE4;
+  --rig-bay: #E4E8EE;
+  --rig-line: rgb(11 13 17 / 0.34);
 
   --lift-1: 0 1px 2px rgb(11 13 17 / 0.06), 0 8px 24px -16px rgb(11 13 17 / 0.28);
   --lift-2: 0 20px 48px -24px rgb(11 13 17 / 0.30);
@@ -132,13 +154,16 @@
 
   /* Drawings stay light-on-light: the components read as machined metal
      rather than as photo negatives of the dark versions. */
-  --art-ink: #9BA3AF;
-  --art-ink-hi: #626B78;
-  --art-void: #DDE1E7;
-  --art-fill: #EFF1F4;
-  --art-fill-2: #E4E7EC;
-  --art-fill-3: #D5D9E0;
-  --art-fill-4: #C4C9D2;
+  --art-ink: #8F98A5;
+  --art-ink-hi: #545D6A;
+  /* Deep recesses (fan hubs, port openings, slot interiors) need to be clearly
+     darker than the grey well the drawing sits in, or the part loses its
+     interior depth entirely. */
+  --art-void: #B7BFCB;
+  --art-fill: #DCE1E8;
+  --art-fill-2: #EBEEF2;
+  --art-fill-3: #F4F6F9;
+  --art-fill-4: #FCFCFD;
   --art-pcb: #E1EAE3;
   --art-glass: #E6EBF1;
   --art-gold: #B8912F;

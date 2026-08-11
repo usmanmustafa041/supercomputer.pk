@@ -140,8 +140,8 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
           <div
             className="absolute inset-0 border transition-colors duration-300"
             style={{
-              borderColor: hasError ? "var(--color-err)" : hasChassis ? "var(--line-hi)" : "var(--line)",
-              background: "var(--color-surface)",
+              borderColor: hasError ? "var(--color-err)" : hasChassis ? "var(--rig-line)" : "var(--line-mid)",
+              background: "var(--rig-shell)",
               borderStyle: hasChassis ? "solid" : "dashed",
               boxShadow: hasChassis ? "var(--lift-2)" : "none",
             }}
@@ -166,8 +166,8 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
                 top: "10%",
                 width: "34%",
                 height: "34%",
-                background: hasCpu ? "var(--art-fill-3)" : "transparent",
-                border: `1px solid ${hasCpu ? "var(--line-hi)" : "var(--line)"}`,
+                background: hasCpu ? "var(--rig-rail)" : "transparent",
+                border: `1px solid ${hasCpu ? "var(--rig-line)" : "var(--line-mid)"}`,
                 transform: `translateZ(${hasCpu ? 10 : 0}px)`,
               }}
             />
@@ -178,7 +178,7 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
                   key={i}
                   className="flex-1 transition-all duration-300"
                   style={{
-                    background: i < dimms ? "var(--color-cool)" : "var(--wash)",
+                    background: i < dimms ? "var(--color-cool)" : "var(--rig-bay)",
                     opacity: i < dimms ? 0.55 : 1,
                     transitionDelay: `${i * 24}ms`,
                   }}
@@ -200,7 +200,7 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
                   height: rack ? "7%" : "4%",
                   transform: `translateZ(${34 + i * 9}px)`,
                   transitionDelay: `${i * 55}ms`,
-                  background: "linear-gradient(100deg, var(--color-raised), var(--color-surface))",
+                  background: "var(--rig-node-hot)",
                   border: "1px solid var(--color-acc)",
                   boxShadow: "0 6px 18px -10px var(--color-acc)",
                 }}
@@ -228,8 +228,8 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
               {Array.from({ length: Math.min(10, drives) }).map((_, i) => (
                 <span
                   key={i}
-                  className="flex-1 border border-[var(--line-mid)] transition-opacity duration-300"
-                  style={{ background: "var(--art-fill-2)", transitionDelay: `${i * 30}ms` }}
+                  className="flex-1 transition-opacity duration-300"
+                  style={{ background: "var(--rig-node)", border: "1px solid var(--rig-line)", transitionDelay: `${i * 30}ms` }}
                 />
               ))}
             </div>
@@ -238,7 +238,7 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
           {/* power rail */}
           <div
             className="absolute left-0 right-0 bottom-0 h-[3px] overflow-hidden"
-            style={{ transform: "translateZ(58px)", background: "var(--wash)" }}
+            style={{ transform: "translateZ(58px)", background: "var(--rig-bay)" }}
           >
             <div
               className="h-full transition-[width] duration-500"

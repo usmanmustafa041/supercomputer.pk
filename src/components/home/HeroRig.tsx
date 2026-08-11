@@ -112,10 +112,14 @@ export default function HeroRig() {
             aria-hidden
           />
 
-          {/* rack shell */}
+          {/* rack shell — recessed cavity, deliberately darker than the page */}
           <div
-            className="absolute inset-0 border border-[var(--line-hi)] bg-[var(--color-base)]"
-            style={{ transform: "translateZ(0px)" }}
+            className="absolute inset-0 border"
+            style={{
+              transform: "translateZ(0px)",
+              background: "var(--rig-shell)",
+              borderColor: "var(--rig-line)",
+            }}
           >
             <div className="absolute inset-0 grid-field opacity-70" aria-hidden />
             <div className="scanline" style={{ top: 0 }} aria-hidden />
@@ -125,8 +129,13 @@ export default function HeroRig() {
           {[3, 97].map((x) => (
             <div
               key={x}
-              className="absolute top-0 bottom-0 w-[3%] bg-[var(--color-raised)] border-x border-[var(--line-mid)]"
-              style={{ left: `${x}%`, transform: "translateX(-50%) translateZ(46px)" }}
+              className="absolute top-0 bottom-0 w-[3.5%] border-x"
+              style={{
+                left: `${x}%`,
+                transform: "translateX(-50%) translateZ(46px)",
+                background: "var(--rig-rail)",
+                borderColor: "var(--rig-line)",
+              }}
               aria-hidden
             />
           ))}
@@ -152,34 +161,33 @@ export default function HeroRig() {
                     borderColor: isActive
                       ? "var(--color-acc)"
                       : n.tone === "acc"
-                        ? "color-mix(in srgb, var(--color-acc) 42%, var(--line-hi))"
-                        : "var(--line-hi)",
-                    background:
-                      n.tone === "acc"
-                        ? "linear-gradient(100deg, var(--color-overlay), var(--color-raised))"
-                        : "var(--color-raised)",
+                        ? "color-mix(in srgb, var(--color-acc) 55%, var(--rig-line))"
+                        : "var(--rig-line)",
+                    background: n.tone === "acc" ? "var(--rig-node-hot)" : "var(--rig-node)",
                     boxShadow: isActive
                       ? "var(--lift-2)"
                       : n.tone === "acc"
                         ? "0 4px 20px -12px var(--color-acc)"
-                        : "none",
+                        : "0 2px 8px -6px rgb(0 0 0 / 0.5)",
                   }}
                 >
                   {/* front-panel detail: accelerator bays or port cages */}
                   <div className="absolute inset-1.5 flex items-center gap-[3px] overflow-hidden">
-                    {Array.from({ length: n.gpus ? 8 : 12 }).map((_, k) => (
-                      <span
-                        key={k}
-                        className="flex-1 h-full min-h-[3px]"
-                        style={{
-                          background:
-                            n.gpus && k < n.gpus
-                              ? "color-mix(in srgb, var(--color-acc) 62%, transparent)"
-                              : "var(--color-base)",
-                          border: `1px solid ${n.gpus && k < n.gpus ? "var(--color-acc)" : "var(--line-mid)"}`,
-                        }}
-                      />
-                    ))}
+                    {Array.from({ length: n.gpus ? 8 : 12 }).map((_, k) => {
+                      const filled = Boolean(n.gpus) && k < n.gpus;
+                      return (
+                        <span
+                          key={k}
+                          className="flex-1 h-full min-h-[3px]"
+                          style={{
+                            background: filled
+                              ? "color-mix(in srgb, var(--color-acc) 78%, transparent)"
+                              : "var(--rig-bay)",
+                            border: `1px solid ${filled ? "var(--color-acc)" : "var(--rig-line)"}`,
+                          }}
+                        />
+                      );
+                    })}
                   </div>
 
                   {/* status LED */}
