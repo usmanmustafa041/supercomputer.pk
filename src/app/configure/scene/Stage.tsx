@@ -245,11 +245,27 @@ function Ghost({
 
 /* ------------------------------------------------------------- cluster */
 
-/** A 42U cabinet drawn around the node, with peers stacked above it. */
-function ClusterRack({ it, pal, peers }: { it: Interior; pal: ScenePalette; peers: number }) {
-  const w = u(it.width) + 0.16;
-  const d = u(it.depth) + 0.12;
-  const cabinetH = u(42 * RACK_U_MM);
+/**
+ * The cabinet the node lives in, with peers stacked above it.
+ *
+ * Height and depth come from the rack in the build when there is one, so
+ * adding an APC NetShelter actually changes what is drawn. Without a rack
+ * selected it falls back to a 42U outline as an indication.
+ */
+function ClusterRack({
+  it,
+  pal,
+  peers,
+  rack,
+}: {
+  it: Interior;
+  pal: ScenePalette;
+  peers: number;
+  rack: { heightU: number; depthMm: number; widthMm: number } | null;
+}) {
+  const w = rack ? u(rack.widthMm) : u(it.width) + 0.16;
+  const d = rack ? u(rack.depthMm) : u(it.depth) + 0.12;
+  const cabinetH = u((rack?.heightU ?? 42) * RACK_U_MM);
   const nodeH = u(it.height);
 
   return (
@@ -312,24 +328,50 @@ function ClusterRack({ it, pal, peers }: { it: Interior; pal: ScenePalette; peer
  * distances. Nothing appeared to happen, which is what made the target
  * buttons feel dead.
  */
-function Reframe({ it, framedHeight }: { it: Interior; framedHeight: number }) {
+function Reframe({
+  it,
+  framedHeight,
+  framedDepth,
+}: {
+  it: Interior;
+  framedHeight: number;
+  framedDepth: number;
+}) {
   const camera = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
+  const size = useThree((s) => s.size);
   const w = u(it.width);
   const h = u(framedHeight);
-  const d = u(it.depth);
+  const d = u(framedDepth);
+  const aspect = size.width / Math.max(1, size.height);
 
   useEffect(() => {
-    const span = Math.max(w, d, h);
-    const focus = new THREE.Vector3(0, h * 0.45, 0);
-    camera.position.set(span * 0.95, span * 0.72 + h * 0.25, span * 1.15);
-    camera.lookAt(focus);
-    camera.updateProjectionMatrix();
-    // Distance clamps are declared on <OrbitControls> instead of assigned here,
-    // so only the focus point needs touching imperatively.
+    const cam = camera as THREE.PerspectiveCamera;
+
+    /**
+     * Fit the whole bounding box rather than guessing a distance from one
+     * dimension. A 42U cabinet is four times taller than it is wide, so the
+     * old `span * 1.15` framing cropped the top off — and because the same
+     * span drove the zoom clamps, you could not pull back far enough to see it.
+     */
+    const vFov = (cam.fov * Math.PI) / 180;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+    const distForHeight = h / 2 / Math.tan(vFov / 2);
+    const distForWidth = Math.max(w, d) / 2 / Math.tan(hFov / 2);
+    const dist = Math.max(distForHeight, distForWidth) * 1.35 + d / 2;
+
+    const focus = new THREE.Vector3(0, h * 0.42, 0);
+    // Keep the established three-quarter view; only the distance adapts.
+    const dir = new THREE.Vector3(0.62, 0.5, 0.75).normalize();
+    cam.position.copy(focus).addScaledVector(dir, dist);
+    cam.lookAt(focus);
+    // `far` is set generously on the Canvas camera prop instead of here, so
+    // nothing on the hook-returned object is mutated.
+    cam.updateProjectionMatrix();
+
     controls?.target.copy(focus);
     controls?.update();
-  }, [camera, controls, w, h, d]);
+  }, [camera, controls, w, h, d, aspect]);
 
   return null;
 }
@@ -357,7 +399,13 @@ function SceneBody({
   const ghostList = useMemo(() => ghosts(lines, target), [lines, target]);
   const hasChassis = lines.some((l) => l.product.kind === "chassis");
   // A cluster is this node repeated up a cabinet, so draw the cabinet too.
-  const cluster = target === "cluster" && interior.rack;
+  const rackLine = lines.find((l) => l.product.kind === "rack");
+  const rack =
+    rackLine && rackLine.product.kind === "rack"
+      ? { heightU: rackLine.product.heightU, depthMm: rackLine.product.depthMm, widthMm: rackLine.product.widthMm }
+      : null;
+  // Draw the cabinet for a cluster, or whenever a rack is actually selected.
+  const cluster = interior.rack && (target === "cluster" || rack !== null);
   const span = Math.max(u(interior.width), u(interior.depth));
 
   return (
@@ -396,9 +444,16 @@ function SceneBody({
 
       <ContactShadows position={[0, 0.001, 0]} opacity={pal.dark ? 0.55 : 0.3} scale={span * 3} blur={2.4} far={4} />
 
-      <Reframe it={interior} framedHeight={cluster ? 42 * 44.45 : interior.height} />
+      <Reframe it={interior} framedHeight={cluster ? (rack?.heightU ?? 42) * 44.45 : interior.height} framedDepth={cluster && rack ? rack.depthMm : interior.depth} />
       <Shell it={interior} pal={pal} hasChassis={hasChassis} conflict={chassisConflict} />
-      {cluster && <ClusterRack it={interior} pal={pal} peers={7} />}
+      {cluster && (
+        <ClusterRack
+          it={interior}
+          pal={pal}
+          rack={rack}
+          peers={target === "cluster" ? Math.max(1, Math.floor(((rack?.heightU ?? 42) * 44.45) / Math.max(1, interior.height)) - 1) : 0}
+        />
+      )}
 
       {ghostList.map((g, i) => (
         <Ghost key={`${g.kind}-${i}`} box={g.box} it={interior} label={g.label} pal={pal} active={dragKind === g.kind} />
@@ -420,8 +475,8 @@ function SceneBody({
         makeDefault
         enableDamping
         dampingFactor={0.08}
-        minDistance={span * 0.45}
-        maxDistance={span * 3.2}
+        minDistance={span * 0.18}
+        maxDistance={span * 6}
         maxPolarAngle={Math.PI / 2 - 0.03}
         target={[0, u(interior.height) * 0.45, 0]}
       />
@@ -446,7 +501,15 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
   const pal = useScenePalette();
   const [selected, setSelected] = useState<string | null>(null);
   const { interior } = useMemo(() => layout(lines, target), [lines, target]);
-  const span = Math.max(u(interior.width), u(interior.depth), u(interior.height));
+  const rackLine = lines.find((l) => l.product.kind === "rack");
+  const rackU = rackLine && rackLine.product.kind === "rack" ? rackLine.product.heightU : 42;
+  const cabinet = interior.rack && (target === "cluster" || rackLine !== undefined);
+  // Clamp against whatever is actually framed, so the cabinet can be seen whole.
+  const span = Math.max(
+    u(interior.width),
+    u(interior.depth),
+    u(cabinet ? rackU * 44.45 : interior.height)
+  );
 
   return (
     <div
@@ -472,7 +535,9 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
         dpr={[1, 2]}
         // Framed from the open side. The previous distance sat about twice as
         // far back as the field of view needed, so the case read as a speck.
-        camera={{ position: [span * 0.95, span * 0.72, span * 1.15], fov: 40, near: 0.05, far: 120 }}
+        // Reframe repositions this on every volume change; `far` is generous
+        // enough for a fully zoomed-out 42U cabinet.
+        camera={{ position: [span * 0.95, span * 0.72, span * 1.15], fov: 40, near: 0.05, far: 600 }}
         onPointerMissed={() => setSelected(null)}
         gl={{ antialias: true }}
       >

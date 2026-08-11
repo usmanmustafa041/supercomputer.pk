@@ -41,7 +41,6 @@ const COLUMNS: Array<{ head: string; links: Array<[string, string]> }> = [
       ["Compatibility rules", "/rules"],
       ["Condition grading", "/grading"],
       ["In stock now", "/catalog?stock=1"],
-      ["Request a quote", "/quote"],
     ],
   },
 ];

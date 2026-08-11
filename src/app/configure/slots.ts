@@ -12,6 +12,16 @@ export interface Slot {
   core: boolean;
   /** Targets where this slot is relevant at all. */
   targets: Target[];
+  /**
+   * How many of this part a single node can physically take.
+   *
+   * Memory and drives multiply freely; a node has exactly one motherboard and
+   * one chassis however many you click. Without this the quantity control let
+   * you specify twelve boards for one machine and only ever drew the first.
+   */
+  maxPerNode: number;
+  /** Shown when the ceiling is reached, so the refusal has a reason. */
+  maxNote?: string;
 }
 
 /**
@@ -20,20 +30,20 @@ export interface Slot {
  * about the case at the end.
  */
 export const SLOTS: Slot[] = [
-  { kind: "chassis", label: "Chassis", hint: "Sets GPU clearance, cooler height, bay count and airflow. Decide this early.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"] },
-  { kind: "motherboard", label: "Motherboard", hint: "Socket, memory type, slot widths and lane wiring all come from here.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"] },
-  { kind: "cpu", label: "Processor", hint: "Must match the board socket. Quantity must equal populated sockets.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"] },
-  { kind: "cooler", label: "CPU cooling", hint: "One per socket, rated for peak power — not nameplate TDP.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"] },
-  { kind: "memory", label: "Memory", hint: "Populate every channel. Registered parts will not post in a consumer board.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"] },
-  { kind: "gpu", label: "Accelerators", hint: "Check slot width, card length and whether the card has fans of its own.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"] },
-  { kind: "storage", label: "Storage", hint: "The backplane decides what the bays will actually accept.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"] },
-  { kind: "psu", label: "Power supply", hint: "Sized on peak including GPU transients, with native cables per card.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"] },
-  { kind: "nic", label: "Network", hint: "Needs a wide enough slot at a high enough PCIe generation to hit line rate.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"] },
-  { kind: "switch", label: "Switch", hint: "Port type and fabric must match the adapters.", defaultQty: 1, core: false, targets: ["cluster"] },
-  { kind: "optic", label: "Optics & cables", hint: "Vendor coding matters — a mis-coded cable simply will not link.", defaultQty: 1, core: false, targets: ["rack", "cluster"] },
-  { kind: "rack", label: "Rack", hint: "Depth and door perforation, not just height.", defaultQty: 1, core: false, targets: ["rack", "cluster"] },
-  { kind: "pdu", label: "Power distribution", hint: "Above roughly 7.4kW you need three-phase.", defaultQty: 1, core: false, targets: ["rack", "cluster"] },
-  { kind: "ups", label: "UPS", hint: "Sized on peak load. Double-conversion given local grid behaviour.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"] },
+  { kind: "chassis", label: "Chassis", hint: "Sets GPU clearance, cooler height, bay count and airflow. Decide this early.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 1, maxNote: "A node has one chassis. For more machines, quote them as separate nodes." },
+  { kind: "motherboard", label: "Motherboard", hint: "Socket, memory type, slot widths and lane wiring all come from here.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 1, maxNote: "A node has one motherboard. Two machines means two quotes, or a multi-node cluster." },
+  { kind: "cpu", label: "Processor", hint: "Must match the board socket. Quantity must equal populated sockets.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 2, maxNote: "No board here takes more than two sockets." },
+  { kind: "cooler", label: "CPU cooling", hint: "One per socket, rated for peak power — not nameplate TDP.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 2, maxNote: "One heatsink per populated socket." },
+  { kind: "memory", label: "Memory", hint: "Populate every channel. Registered parts will not post in a consumer board.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 24, maxNote: "24 DIMM slots is the largest board in the catalog." },
+  { kind: "gpu", label: "Accelerators", hint: "Check slot width, card length and whether the card has fans of its own.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 8, maxNote: "Eight accelerators is the densest chassis we sell." },
+  { kind: "storage", label: "Storage", hint: "The backplane decides what the bays will actually accept.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 24, maxNote: "24 bays is the largest backplane in the catalog." },
+  { kind: "psu", label: "Power supply", hint: "Sized on peak including GPU transients, with native cables per card.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 4, maxNote: "Beyond four supplies you are describing a rack feed, not a node." },
+  { kind: "nic", label: "Network", hint: "Needs a wide enough slot at a high enough PCIe generation to hit line rate.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 8 },
+  { kind: "switch", label: "Switch", hint: "Port type and fabric must match the adapters.", defaultQty: 1, core: false, targets: ["cluster"], maxPerNode: 4 },
+  { kind: "optic", label: "Optics & cables", hint: "Vendor coding matters — a mis-coded cable simply will not link.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 64 },
+  { kind: "rack", label: "Rack", hint: "Depth and door perforation, not just height.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 1, maxNote: "One cabinet per configuration." },
+  { kind: "pdu", label: "Power distribution", hint: "Above roughly 7.4kW you need three-phase.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 4 },
+  { kind: "ups", label: "UPS", hint: "Sized on peak load. Double-conversion given local grid behaviour.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 4 },
 ];
 
 export function slotsFor(target: Target): Slot[] {

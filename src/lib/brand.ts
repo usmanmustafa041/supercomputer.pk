@@ -13,12 +13,17 @@ export const BRAND = {
   hours: "Mon-Sat, 09:00-19:00 PKT",
 } as const;
 
-/** The configurator is the product; it leads. */
+/**
+ * The configurator is the product; it leads.
+ *
+ * Quoting is deliberately not a nav destination. A quote only means something
+ * attached to a configuration, so you reach it from the configurator with the
+ * build in hand rather than landing on an empty form.
+ */
 export const NAV = [
   { href: "/configure", label: "Configurator", desc: "Build it, we check it" },
   { href: "/systems", label: "Systems", desc: "Prebuilt nodes and clusters" },
   { href: "/catalog", label: "Catalog", desc: "Every part we stock, filterable" },
-  { href: "/quote", label: "Request a quote", desc: "Send us a configuration" },
 ] as const;
 
 /** Used on the home page. Deliberately not superlatives. */

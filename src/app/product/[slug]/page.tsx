@@ -160,10 +160,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     ? `Brought in on our own import channel against a confirmed order — about ${p.avail.leadDays} working days, landed with duty and clearing handled by us.`
                     : `Not on the shelf this moment. About ${p.avail.leadDays} working days from our regional stock.`}
               </p>
-              <Link href={`/quote?b=${p.id}`} className="btn btn-primary w-full mt-4">
-                Request a quote
-              </Link>
-              <Link href={`/configure?b=${p.id}`} className="btn btn-ghost w-full mt-2">
+              {/* Quoting runs through the configurator, so a part goes into a
+                  build first rather than becoming a one-line request. */}
+              <Link href={`/configure?b=${p.id}`} className="btn btn-primary w-full mt-4">
                 Add to a build
               </Link>
             </div>

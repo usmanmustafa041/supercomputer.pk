@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import PartArt from "@/components/art/PartArt";
 import PartPicker from "./PartPicker";
 import { Telemetry } from "./BuildViewport";
-import { PRESETS, slotsFor, type Slot } from "./slots";
+import { PRESETS, SLOTS, slotsFor, type Slot } from "./slots";
 import { CONDITION_LABEL, type Kind, type Product } from "@/lib/catalog";
 import { checkBuild } from "@/lib/compat/engine";
 import { TARGET_LABEL, type BuildLine, type Finding, type Target } from "@/lib/compat/types";
@@ -58,6 +58,15 @@ export default function Configurator({
     prevTarget: Target;
   } | null>(null);
   const [switching, setSwitching] = useState(false);
+  /** Kind whose per-node ceiling was just hit, so the refusal is explained. */
+  const [capHit, setCapHit] = useState<Kind | null>(null);
+
+  // Clear the ceiling notice a few seconds after it appears.
+  useEffect(() => {
+    if (!capHit) return;
+    const t = setTimeout(() => setCapHit(null), 6000);
+    return () => clearTimeout(t);
+  }, [capHit]);
 
   useEffect(() => {
     window.history.replaceState(null, "", `/configure${encodeBuild(lines, target)}`);
@@ -75,22 +84,61 @@ export default function Configurator({
     return m;
   }, [lines]);
 
-  const add = useCallback((p: Product, qty: number) => {
+  const add = useCallback(
+    (p: Product, qty: number) => {
+      const cap = SLOTS.find((s) => s.kind === p.kind)?.maxPerNode ?? 99;
+      setLines((prev) => {
+        const already = prev
+          .filter((l) => l.product.kind === p.kind && l.product.id !== p.id)
+          .reduce((n, l) => n + l.qty, 0);
+        const at = prev.findIndex((l) => l.product.id === p.id);
+        const current = at >= 0 ? prev[at].qty : 0;
+        const room = Math.max(0, cap - already - current);
+        if (room === 0) {
+          setCapHit(p.kind);
+          return prev;
+        }
+        const grantable = Math.min(qty, room);
+        if (grantable < qty) setCapHit(p.kind);
+        if (at >= 0) {
+          const next = [...prev];
+          next[at] = { ...next[at], qty: current + grantable };
+          return next;
+        }
+        return [...prev, { product: p, qty: grantable }];
+      });
+    },
+    []
+  );
+
+  /**
+   * Adjusts a line by a delta rather than an absolute quantity.
+   *
+   * The buttons used to pass `l.qty + 1` captured at render time, so several
+   * clicks inside one React batch all computed from the same stale value and
+   * every increment but the last was lost. Reading the current quantity inside
+   * the updater makes rapid clicking behave.
+   */
+  const bumpQty = useCallback((id: string, delta: number) => {
     setLines((prev) => {
-      const at = prev.findIndex((l) => l.product.id === p.id);
-      if (at >= 0) {
-        const next = [...prev];
-        next[at] = { ...next[at], qty: next[at].qty + qty };
-        return next;
-      }
-      return [...prev, { product: p, qty }];
+      const line = prev.find((l) => l.product.id === id);
+      if (!line) return prev;
+      const wanted = line.qty + delta;
+      if (wanted <= 0) return prev.filter((l) => l.product.id !== id);
+
+      const cap = SLOTS.find((s) => s.kind === line.product.kind)?.maxPerNode ?? 99;
+      const others = prev
+        .filter((l) => l.product.kind === line.product.kind && l.product.id !== id)
+        .reduce((n, l) => n + l.qty, 0);
+      const capped = Math.min(wanted, Math.max(1, cap - others));
+      if (capped < wanted) setCapHit(line.product.kind);
+      return prev.map((l) => (l.product.id === id ? { ...l, qty: capped } : l));
     });
   }, []);
 
-  const setQty = useCallback((id: string, qty: number) => {
-    setLines((prev) =>
-      qty <= 0 ? prev.filter((l) => l.product.id !== id) : prev.map((l) => (l.product.id === id ? { ...l, qty } : l))
-    );
+  /** Removes a line outright, used by the orphaned-parts list. */
+  const removeLine = useCallback((id: string) => {
+    setLines((prev) => prev.filter((l) => l.product.id !== id));
   }, []);
 
   const loadPreset = useCallback((presetId: string) => {
@@ -218,6 +266,19 @@ export default function Configurator({
           </div>
         </div>
       </header>
+
+      {capHit && (
+        <div className="panel border-l-2 border-l-warn px-4 py-2.5 mb-4 flex items-center gap-3 pop">
+          <span className="pill pill-warn shrink-0">at the limit</span>
+          <p className="text-[12.5px] text-ink-1 flex-1 min-w-0">
+            {SLOTS.find((s) => s.kind === capHit)?.maxNote ??
+              `A node takes at most ${SLOTS.find((s) => s.kind === capHit)?.maxPerNode} of these.`}
+          </p>
+          <button onClick={() => setCapHit(null)} className="btn btn-ghost btn-sm btn-icon shrink-0" aria-label="Dismiss">
+            ×
+          </button>
+        </div>
+      )}
 
       {rehome && (
         <div className="panel border-l-2 border-l-cool px-4 py-3 mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 pop">
@@ -387,7 +448,7 @@ export default function Configurator({
                               <div className="flex flex-col items-end gap-1 shrink-0">
                                 <div className="flex items-center border border-[var(--line-mid)]">
                                   <button
-                                    onClick={() => setQty(l.product.id, l.qty - 1)}
+                                    onClick={() => bumpQty(l.product.id, -1)}
                                     className="w-5 h-5 t-data text-[12px] text-ink-2 hover:text-ink hover:bg-[var(--wash)]"
                                     aria-label={`Decrease ${l.product.model}`}
                                   >
@@ -395,7 +456,7 @@ export default function Configurator({
                                   </button>
                                   <span className="w-6 text-center t-data text-[11px]">{l.qty}</span>
                                   <button
-                                    onClick={() => setQty(l.product.id, l.qty + 1)}
+                                    onClick={() => bumpQty(l.product.id, 1)}
                                     className="w-5 h-5 t-data text-[12px] text-ink-2 hover:text-ink hover:bg-[var(--wash)]"
                                     aria-label={`Increase ${l.product.model}`}
                                   >
@@ -430,7 +491,7 @@ export default function Configurator({
                         <span className="text-ink-2">{l.qty}x</span> {l.product.brand} {l.product.model}
                       </span>
                       <button
-                        onClick={() => setQty(l.product.id, 0)}
+                        onClick={() => removeLine(l.product.id)}
                         className="btn btn-ghost btn-sm shrink-0"
                         aria-label={`Remove ${l.product.model}`}
                       >
