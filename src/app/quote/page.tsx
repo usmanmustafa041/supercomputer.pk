@@ -46,7 +46,7 @@ export default async function QuotePage({
         <p className="mt-5 text-[15px] leading-relaxed text-ink-1">
           {lines.length
             ? "Check the list below, tell us about the site, and we come back with availability, lead time and a landed quotation from our own stock."
-            : "You do not need part numbers. Describe the workload — the model you want to fine-tune, the simulation that will not fit in memory, the number of CAD seats you are consolidating — and we will specify it and explain the choices."}
+            : "You do not need part numbers. Describe the workload, the model you want to fine-tune, the simulation that will not fit in memory, the number of CAD seats you are consolidating, and we will specify it and explain the choices."}
         </p>
       </header>
 

@@ -25,7 +25,7 @@ export type View = "node" | "rack";
 
 /**
  * Chassis space is origin-at-corner with z running front to back. Three's +z
- * points at the viewer, so z is flipped here — otherwise the case renders
+ * points at the viewer, so z is flipped here, otherwise the case renders
  * back-to-front and the power supply ends up in your face.
  */
 function toScene(box: Box, it: Interior): [number, number, number] {
@@ -45,7 +45,7 @@ function Shell({
   it: Interior;
   pal: ScenePalette;
   hasChassis: boolean;
-  /** True when the chassis itself is a blocking finding — the cage goes red. */
+  /** True when the chassis itself is a blocking finding, the cage goes red. */
   conflict: boolean;
 }) {
   const w = u(it.width);
@@ -56,7 +56,7 @@ function Shell({
   return (
     <group position={[0, h / 2, 0]}>
       {/* Only the floor and the far wall are solid. A translucent side panel
-          was the single biggest legibility problem — it greyed out everything
+          was the single biggest legibility problem, it greyed out everything
           behind it, which is the entire build. The cage edges carry the
           boundary instead, which is also what reads as "enclosure". */}
       <mesh position={[0, -h / 2, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -296,7 +296,7 @@ function ClusterRack({
         </mesh>
       ))}
 
-      {/* Peer nodes — the same node repeated up the cabinet. Drawn plainly
+      {/* Peer nodes, the same node repeated up the cabinet. Drawn plainly
           because they are copies, not separate configurations. */}
       {Array.from({ length: peers }).map((_, i) => {
         const y = nodeH * (i + 1) + u(6) * (i + 1);
@@ -332,7 +332,7 @@ function ClusterRack({
  * Re-frames the camera whenever the interior volume changes.
  *
  * The `camera` prop on <Canvas> is only read when the canvas mounts, so
- * swapping a tower for a 4U chassis — or switching deployment target — left
+ * swapping a tower for a 4U chassis, or switching deployment target, left
  * the view framed for the previous volume and the controls clamped to its
  * distances. Nothing appeared to happen, which is what made the target
  * buttons feel dead.
@@ -360,7 +360,7 @@ function Reframe({
     /**
      * Fit the whole bounding box rather than guessing a distance from one
      * dimension. A 42U cabinet is four times taller than it is wide, so the
-     * old `span * 1.15` framing cropped the top off — and because the same
+     * old `span * 1.15` framing cropped the top off, and because the same
      * span drove the zoom clamps, you could not pull back far enough to see it.
      */
     const vFov = (cam.fov * Math.PI) / 180;
@@ -489,7 +489,7 @@ function SceneBody({
 
       {/* No `target` prop on purpose. drei re-applies it on every render, which
           overwrote the focus Reframe had just set and dragged the look-at back
-          down to the node — the cabinet then ran off the top of the screen.
+          down to the node, the cabinet then ran off the top of the screen.
           Reframe owns the target; the controls only own the distance clamps. */}
       <OrbitControls
         makeDefault
@@ -597,7 +597,7 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
       </div>
 
       <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
-        {/* Only offered when there is a rack to look at — a desk tower has no
+        {/* Only offered when there is a rack to look at, a desk tower has no
             cabinet view, and an inert toggle is worse than no toggle. */}
         {rackAvailable && (
           <div className="flex border border-[var(--line-mid)] bg-[var(--color-surface)]">

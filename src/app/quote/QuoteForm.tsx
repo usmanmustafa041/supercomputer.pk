@@ -73,7 +73,7 @@ export default function QuoteForm({
   }, []);
 
   /**
-   * No backend yet — this composes a mail draft carrying the whole request so
+   * No backend yet, this composes a mail draft carrying the whole request so
    * nothing is silently dropped while the email-versus-database decision is
    * still open. Swap for a POST when that is settled.
    */
@@ -102,13 +102,13 @@ export default function QuoteForm({
       `Compatibility: ${report.errors} blocking, ${report.warns} warnings`,
       "",
       "Requirements:",
-      meta.notes || "—",
+      meta.notes || "Nothing added",
       "",
       "(Printed requirement document attached separately.)",
     ].join("\n");
 
     window.location.href = `mailto:${BRAND.email}?subject=${encodeURIComponent(
-      `Quote request ${ref_} — ${meta.org || meta.name}`
+      `Quote request ${ref_}, ${meta.org || meta.name}`
     )}&body=${encodeURIComponent(body)}`;
     setSent(true);
   }
@@ -164,8 +164,8 @@ export default function QuoteForm({
           <fieldset>
             <legend className="t-label mb-2.5">What it is for</legend>
             <p className="text-[12.5px] text-ink-2 mb-3 leading-relaxed">
-              This is what actually drives the specification — whether you want memory bandwidth, VRAM
-              capacity, core count or fabric.
+              This matters more than anything else. It tells us whether to spend your money on memory, on graphics
+              cards, on processor cores or on the network between machines.
             </p>
             <div className="flex flex-wrap gap-2">
               {WORKLOADS.map((w) => (
@@ -186,14 +186,14 @@ export default function QuoteForm({
             <legend className="t-label mb-2.5">Detail</legend>
             <label className="block">
               <span className="t-data text-[10.5px] text-ink-3 uppercase tracking-wider block mb-1.5">
-                Requirements and site constraints
+                Anything else we should know
               </span>
               <textarea
                 value={meta.notes}
                 onChange={(e) => set("notes", e.target.value)}
                 rows={6}
                 className="field h-auto py-2.5 resize-y leading-relaxed"
-                placeholder="Model sizes, dataset volume, existing hardware to integrate with, rack depth and power available, whether there is a generator, cooling in the room, anyone on site who can rack it."
+                placeholder="How big the models or datasets are, any hardware this has to work alongside, how much space and power you have, whether there is a generator, how the room is cooled, and whether anyone on site can install it."
               />
             </label>
           </fieldset>
@@ -218,7 +218,7 @@ export default function QuoteForm({
           {!complete && (
             <p className="text-[11.5px] text-ink-3">Name and email are needed before the request can be sent.</p>
           )}
-          {sent && <p className="pill pill-ok">Draft opened — send it and we reply within one working day</p>}
+          {sent && <p className="pill pill-ok">Draft opened, send it and we reply within one working day</p>}
         </form>
 
         {/* ------------------------------------------------------------ rail */}
@@ -264,9 +264,9 @@ export default function QuoteForm({
               <h2 className="t-label mb-2.5">What happens next</h2>
               <ol className="space-y-2 text-[12.5px] text-ink-1 leading-relaxed">
                 {[
-                  "We confirm availability against our own stock and import channel.",
-                  "You get a landed quotation — duty and taxes included, itemised.",
-                  "Anything we would change in the configuration, with the reason.",
+                  "We check what we have in stock and what we need to bring in.",
+                  "You get a full price, itemised, with duty and taxes already included.",
+                  "We tell you anything we would change about the build, and why.",
                 ].map((t, i) => (
                   <li key={t} className="flex gap-2.5">
                     <span className="t-data text-[10px] text-acc shrink-0 mt-0.5">{i + 1}</span>

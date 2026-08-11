@@ -5,16 +5,17 @@ import { getByKind } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Systems",
-  description: "Prebuilt AI workstations, GPU servers, HPC clusters and storage nodes, delivered burned in.",
+  description:
+    "AI workstations, GPU servers, clusters and storage machines, built and tested before they reach you.",
 };
 
 const CATEGORIES: Array<[string, string, string]> = [
-  ["ai-workstation", "AI workstations", "Desk-side machines on ordinary office power. ECC memory, blower cards, no rack required."],
-  ["gpu-server", "GPU servers", "Rack-mounted accelerator nodes with redundant power and front-to-back airflow."],
-  ["cluster", "HPC clusters", "Multi-node systems delivered racked, cabled and validated on site."],
-  ["hpc-node", "Compute nodes", "The unit of growth for an existing Slurm cluster."],
-  ["storage-node", "Storage nodes", "Dense NVMe with RDMA export, sized to keep training GPUs fed."],
-  ["ai-rig", "Open-frame rigs", "Consumer accelerators on risers. No ECC, considerably cheaper per GB of VRAM."],
+  ["ai-workstation", "AI workstations", "Sit next to your desk and run off a normal office socket. No rack needed."],
+  ["gpu-server", "GPU servers", "Go in a rack. Two power supplies so one can fail, and air pulled front to back."],
+  ["cluster", "Clusters", "Several machines working as one. We rack them, cable them and test them at your site."],
+  ["hpc-node", "Extra compute machines", "What you add when an existing cluster needs to get bigger."],
+  ["storage-node", "Storage machines", "Packed with fast drives, sized to keep your GPUs fed with data."],
+  ["ai-rig", "Open-frame rigs", "Gaming cards on an open frame. Cheaper per GB of graphics memory, less robust."],
 ];
 
 export default async function SystemsPage({
@@ -33,12 +34,12 @@ export default async function SystemsPage({
       <header className="mb-8 max-w-3xl">
         <p className="t-eyebrow mb-2.5">Systems</p>
         <h1 className="t-display text-[clamp(1.9rem,4.4vw,3.1rem)]">
-          Assembled, burned in, racked, handed over working
+          Built, tested and handed over working
         </h1>
         <p className="mt-5 text-[15px] leading-relaxed text-ink-1">
-          Every system on this page ships with its software stack installed and a burn-in report. Clusters are
-          cabled and validated at your site, not thrown over the wall as a pallet of boxes. Anything here can be
-          taken apart in the configurator and changed.
+          Everything here arrives with the software already installed and a report showing it ran flat out for
+          72 hours without a problem. Clusters get set up and tested at your site, not dropped off as a stack of
+          boxes. Any of these can be opened in the builder and changed.
         </p>
       </header>
 
@@ -147,7 +148,7 @@ export default async function SystemsPage({
             None of these is quite it?
           </h2>
           <p className="mt-4 text-[14.5px] leading-relaxed text-ink-1">
-            These are starting points, not a fixed menu. Open the configurator and change anything — the
+            These are starting points, not a fixed menu. Open the configurator and change anything, the
             compatibility engine will keep you honest about what the changes cost in power, thermal budget and
             rack space.
           </p>

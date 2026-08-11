@@ -126,7 +126,7 @@ export default function PartPicker({ kind, hint, forTarget, onPick, onClose }: P
             </div>
           ) : items.length === 0 ? (
             <p className="text-[13.5px] text-ink-1 py-10 text-center">
-              Nothing matches “{q}”. Try a shorter query — model numbers work better than full names.
+              Nothing matches “{q}”. Try a shorter query, model numbers work better than full names.
             </p>
           ) : (
             <ul className="grid gap-2.5 sm:grid-cols-2">

@@ -100,7 +100,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <h2 className="t-display text-[22px] mb-1.5">Same part, other grades and partners</h2>
               <p className="text-[13px] text-ink-1 mb-4 leading-relaxed">
                 {siblings.length} other SKU{siblings.length > 1 ? "s" : ""} built on the same silicon. Price
-                differences come from condition grade, board partner and cooler design — not from the die.
+                differences come from condition grade, board partner and cooler design, not from the die.
               </p>
               <div className="space-y-px bg-[var(--line)] border border-[var(--line)]">
                 {siblings.slice(0, 8).map((s) => (
@@ -137,7 +137,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="t-display text-[22px]">Quoted per order</div>
               <p className="t-data text-[10.5px] text-ink-3 mt-1.5 leading-relaxed">
                 Send the request and we reply within one working day with availability, lead time and a landed
-                quotation — duty and taxes included.
+                quotation, duty and taxes included.
               </p>
             </div>
 
@@ -157,7 +157,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 {p.avail.inHouse > 0
                   ? `Held in our ${BRAND.hq} warehouse, tested and ready to dispatch.`
                   : p.avail.indentOnly
-                    ? `Brought in on our own import channel against a confirmed order — about ${p.avail.leadDays} working days, landed with duty and clearing handled by us.`
+                    ? `Brought in on our own import channel against a confirmed order, about ${p.avail.leadDays} working days, landed with duty and clearing handled by us.`
                     : `Not on the shelf this moment. About ${p.avail.leadDays} working days from our regional stock.`}
               </p>
               {/* Quoting runs through the configurator, so a part goes into a

@@ -3,9 +3,9 @@
 export const BRAND = {
   name: "SUPERCOMPUTERS",
   legal: "Supercomputers (Pvt) Ltd",
-  tagline: "Compute infrastructure, delivered in Pakistan.",
+  tagline: "Servers and AI machines, built and supported in Pakistan.",
   strapline:
-    "Refurbished HPC clusters, GPU servers and AI workstations — configured, compatibility-checked and supported locally.",
+    "Refurbished server clusters, GPU machines and AI workstations. Put yours together online, we check it fits, and we look after it here.",
   cities: ["Lahore", "Karachi", "Islamabad"],
   hq: "Lahore",
   email: "sales@supercomputers.pk",
@@ -21,31 +21,31 @@ export const BRAND = {
  * build in hand rather than landing on an empty form.
  */
 export const NAV = [
-  { href: "/configure", label: "Configurator", desc: "Build it, we check it" },
-  { href: "/systems", label: "Systems", desc: "Prebuilt nodes and clusters" },
-  { href: "/catalog", label: "Catalog", desc: "Every part we stock, filterable" },
+  { href: "/configure", label: "Build one", desc: "Pick parts, we check they work together" },
+  { href: "/systems", label: "Systems", desc: "Machines and clusters ready to order" },
+  { href: "/catalog", label: "Parts", desc: "Everything we stock, with filters" },
 ] as const;
 
-/** Used on the home page. Deliberately not superlatives. */
+/** Used on the home page. Plain claims we can actually stand behind. */
 export const PILLARS = [
   {
     k: "01",
-    title: "Every configuration is checked before it is quoted",
-    body: "The configurator runs the same rule set our build engineers use: socket and lane budgets, memory channel population, power connector counts, rack depth, airflow. It tells you what will not work and why, before money changes hands.",
+    title: "We check the build before we price it",
+    body: "The builder runs the same checks our engineers do by hand: does the processor fit the board, is there enough power, will the card physically go in, can the case be cooled. It tells you what will not work and why, before you have paid for anything.",
   },
   {
     k: "02",
-    title: "Refurbished hardware, stated honestly",
-    body: "Six condition grades, each with a defined test regime and warranty term. Tested pulls are labelled as tested pulls. We publish remaining endurance on used drives rather than hiding it.",
+    title: "We say what condition it is in",
+    body: "Six grades, each with a written list of the tests it passed and how long it is covered for. If a part came out of a working machine, we label it that way. On used drives we publish how much life is left rather than hiding it.",
   },
   {
     k: "03",
-    title: "One supplier, one invoice, one warranty",
-    body: "Every part in the configurator comes from our own inventory or our own import channel. You deal with us for the build, the delivery and anything that goes wrong afterwards — not with six vendors who each blame the others.",
+    title: "One company to deal with",
+    body: "Every part comes from our own stock or our own import licence. You buy from us, we deliver it, and if something goes wrong you call us. Not six suppliers who each blame the other five.",
   },
   {
     k: "04",
-    title: "Specified for Pakistani conditions",
-    body: "230V mains, three-phase where the load demands it, load-shedding and generator transfer, ambient temperatures that make a marginal cooler a real problem. The rules account for all of it.",
+    title: "Built for how things work here",
+    body: "230V mains, three-phase once the load gets big, load-shedding and switching over to a generator, and summer temperatures that turn a just-about-adequate cooler into a real problem. All of that is in the checks.",
   },
 ] as const;

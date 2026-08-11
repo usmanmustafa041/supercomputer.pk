@@ -1,7 +1,7 @@
 """Sign up, sign in, and "who am I".
 
 One login endpoint for everyone. The role on the account decides what the
-frontend shows and what the API allows — there is no separate admin login form,
+frontend shows and what the API allows, there is no separate admin login form,
 because two doors into the same building is two doors to get wrong.
 """
 

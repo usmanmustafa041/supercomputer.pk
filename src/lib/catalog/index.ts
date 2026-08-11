@@ -45,7 +45,7 @@ export function getByKind<K extends Kind>(kind: K): Array<Extract<Product, { kin
   return (byKind!.get(kind) ?? []) as Array<Extract<Product, { kind: K }>>;
 }
 
-/** Sibling SKUs from the same underlying part — other grades, other partners. */
+/** Sibling SKUs from the same underlying part, other grades, other partners. */
 export function getFamily(family: string): Product[] {
   build();
   return byFamily!.get(family) ?? [];
@@ -98,7 +98,7 @@ function score(p: Product, tokens: string[]): number {
 
 /**
  * Default browse ordering. Raw capability alone floats SXM and OAM modules to
- * the top of every GPU page, and you cannot buy one of those on its own — they
+ * the top of every GPU page, and you cannot buy one of those on its own, they
  * only ship attached to an HGX or UBB baseboard. Demote what a customer cannot
  * actually deploy standalone so the first screen is useful.
  */

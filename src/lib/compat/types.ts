@@ -8,7 +8,7 @@ export interface BuildLine {
 /** A configuration under construction. Lines are grouped by kind on read. */
 export interface Build {
   lines: BuildLine[];
-  /** Deployment target — changes which rules apply and how hard they bite. */
+  /** Deployment target, changes which rules apply and how hard they bite. */
   target: Target;
 }
 
@@ -28,7 +28,7 @@ export interface Finding {
   severity: Severity;
   title: string;
   detail: string;
-  /** Product ids the finding is about — the UI highlights these lines. */
+  /** Product ids the finding is about, the UI highlights these lines. */
   refs: string[];
   /** What to do about it, when there is a concrete answer. */
   fix?: string;
@@ -37,7 +37,7 @@ export interface Finding {
 export interface PowerBudget {
   /** Sum of sustained board/package power across every component. */
   sustainedW: number;
-  /** Sustained plus transient headroom — what the PSU must actually survive. */
+  /** Sustained plus transient headroom, what the PSU must actually survive. */
   peakW: number;
   /** Total PSU capacity, after redundancy is discounted. */
   suppliedW: number;

@@ -4,11 +4,11 @@
  * Turns catalog specs into to-scale boxes and mount transforms. The point of
  * doing it this way rather than shipping a model library: the geometry *is*
  * the compatibility data. A card 30mm longer than the chassis clearance is
- * drawn 30mm too long and visibly punches through the front panel — you see
+ * drawn 30mm too long and visibly punches through the front panel, you see
  * the problem rather than reading about it.
  *
  * Units are millimetres throughout. The renderer divides by MM_PER_UNIT.
- * Pure functions only — no React, no three.
+ * Pure functions only, no React, no three.
  */
 
 import type { Chassis, Cooler, Cpu, Gpu, Kind, Memory, Motherboard, Product, Psu, Storage } from "../catalog/types";
@@ -33,9 +33,9 @@ export interface Box {
 
 /**
  * Chassis interior space:
- *   x — left to right, 0 at the left wall
- *   y — bottom to top, 0 at the floor
- *   z — front to back, 0 at the front panel
+ *   x, left to right, 0 at the left wall
+ *   y, bottom to top, 0 at the floor
+ *   z, front to back, 0 at the front panel
  */
 export interface Interior {
   width: number;
@@ -68,7 +68,7 @@ const BOARD_SIZE: Record<string, { w: number; h: number }> = {
  *
  * Rack heights come straight from the U count. Tower width is derived from the
  * cooler clearance, because in a tower the CPU cooler height *is* the width
- * constraint — that is the number the spec sheet actually gives you.
+ * constraint, that is the number the spec sheet actually gives you.
  */
 export function interiorOf(chassis: Chassis | null, target: "desk" | "rack" | "cluster" = "desk"): Interior {
   if (!chassis) {
@@ -114,7 +114,7 @@ export function interiorOf(chassis: Chassis | null, target: "desk" | "rack" | "c
 export function boardBox(mb: Motherboard, it: Interior): Box {
   const s = BOARD_SIZE[mb.form] ?? BOARD_SIZE.atx;
   // Thickness stands in for the PCB plus standoffs plus rear I/O shield, which
-  // is what you actually perceive as "the board" — a true 1.6mm PCB renders as
+  // is what you actually perceive as "the board", a true 1.6mm PCB renders as
   // an invisible sliver.
   if (it.rack) {
     // Laid flat on the floor, long edge running front to back.
@@ -310,7 +310,7 @@ export interface Placement {
   kind: Kind;
   label: string;
   box: Box;
-  /** True when the box escapes the chassis interior — a visible fit failure. */
+  /** True when the box escapes the chassis interior, a visible fit failure. */
   clips: boolean;
 }
 

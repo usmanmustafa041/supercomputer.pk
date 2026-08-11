@@ -7,7 +7,7 @@ import type { Target } from "@/lib/compat/types";
 /**
  * A pseudo-3D view of the machine being configured.
  *
- * It is not a render of the actual parts — it is a schematic that reacts to
+ * It is not a render of the actual parts, it is a schematic that reacts to
  * what is in the build: the board appears when a board is chosen, GPU slots
  * fill as cards are added, the power rail lights when the supply covers peak,
  * the shell switches between tower and rack proportions with the target.
@@ -187,7 +187,7 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
             </div>
           </div>
 
-          {/* accelerators — stacked planes lifting off the board */}
+          {/* accelerators, stacked planes lifting off the board */}
           <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
             {Array.from({ length: Math.min(8, gpus) }).map((_, i) => (
               <div
@@ -267,8 +267,8 @@ export default function BuildViewport({ lines, summary, target, hasError }: Prop
       <div className="grid grid-cols-3 border-t border-[var(--line)]">
         {[
           ["Peak", <Telemetry key="p" value={summary.power.peakW} unit="W" />],
-          ["Supply", summary.power.suppliedW ? <Telemetry key="s" value={summary.power.suppliedW} unit="W" /> : "—"],
-          ["Load", summary.power.suppliedW ? <Telemetry key="l" value={loadPct} unit="%" /> : "—"],
+          ["Supply", summary.power.suppliedW ? <Telemetry key="s" value={summary.power.suppliedW} unit="W" /> : "n/a"],
+          ["Load", summary.power.suppliedW ? <Telemetry key="l" value={loadPct} unit="%" /> : "n/a"],
         ].map(([k, v], i) => (
           <div key={k as string} className={`px-3 py-2.5 ${i < 2 ? "border-r border-[var(--line)]" : ""}`}>
             <div className="t-data text-[9px] text-ink-3 uppercase tracking-[0.14em]">{k}</div>

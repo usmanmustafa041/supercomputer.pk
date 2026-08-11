@@ -4,7 +4,7 @@
    TERAFORGE design system
 
    Dark is the brand default. Light is a deliberate alternative,
-   not a system-preference reaction — the toggle in the header is
+   not a system-preference reaction, the toggle in the header is
    the only thing that switches it, and the choice persists.
 
    Colour tokens are declared with `@theme inline` so Tailwind
@@ -45,7 +45,7 @@
 /* ---------------------------------------------------------- dark (default) */
 
 :root {
-  /* Surface ramp. Each step is a visible jump, not a rounding difference —
+  /* Surface ramp. Each step is a visible jump, not a rounding difference.
      the first pass put four levels inside 3% luminance and everything merged
      into one flat field. */
   --c-void: #050609;

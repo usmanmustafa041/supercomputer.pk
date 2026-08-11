@@ -47,7 +47,7 @@ export default function Configurator({
   const [loadingPreset, setLoadingPreset] = useState(false);
   const [highlight, setHighlight] = useState<string[]>([]);
   const [dragKind, setDragKind] = useState<Kind | null>(null);
-  // Accordion index for the validation list — at most one finding open.
+  // Accordion index for the validation list, at most one finding open.
   const [openFinding, setOpenFinding] = useState<number | null>(null);
   /** Notice + undo after a target switch re-homes the build into a new case. */
   const [rehome, setRehome] = useState<{
@@ -79,7 +79,7 @@ export default function Configurator({
    * Anything else you touch closes the explanation.
    *
    * Listening on the document in the capture phase means it dismisses on any
-   * interaction — including taps that land on other buttons — while the badge
+   * interaction, including taps that land on other buttons, while the badge
    * and the popover itself stop propagation so they are not self-closing.
    */
   useEffect(() => {
@@ -272,7 +272,7 @@ export default function Configurator({
       <header className="mb-3 lg:mb-5">
         <p className="t-eyebrow mb-2 hidden lg:block">Configurator</p>
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="t-display text-[clamp(1.5rem,4vw,2.7rem)] hidden lg:block">Build it. We will check it.</h1>
+          <h1 className="t-display text-[clamp(1.5rem,4vw,2.7rem)] hidden lg:block">Build it. We check it as you go.</h1>
           <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto no-bar">
             {(Object.keys(TARGET_LABEL) as Target[]).map((t) => (
               <button
@@ -317,13 +317,13 @@ export default function Configurator({
         <div className="panel border-l-2 border-l-cool px-4 py-3 mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 pop">
           <div className="min-w-0 flex-1">
             <p className="text-[13px]">
-              Moved into <strong className="text-ink">{rehome.to.brand} {rehome.to.model}</strong> —{" "}
+              Moved into <strong className="text-ink">{rehome.to.brand} {rehome.to.model}</strong>, {" "}
               <span className="text-ink-2">{rehome.from.model} cannot be {target === "desk" ? "used on a desk" : "rack mounted"}.</span>
             </p>
             {rehome.relaxed.length > 0 && (
               <p className="text-[12px] text-warn mt-1 leading-relaxed">
-                Nothing satisfied every constraint, so this compromises on {rehome.relaxed.join(", ")}. Check the
-                validation panel.
+                Nothing we stock ticked every box, so this one gives up {rehome.relaxed.join(", ")}. Have a look at the
+                checks panel.
               </p>
             )}
           </div>
@@ -400,7 +400,7 @@ export default function Configurator({
               <div key={k} className="border-r border-b border-[var(--line)] px-3 py-2.5 bg-[var(--color-surface)]">
                 <dt className="t-data text-[9px] text-ink-3 uppercase tracking-[0.12em]">{k}</dt>
                 <dd className="t-data text-[14px] mt-0.5">
-                  {v ? <Telemetry value={v} unit={unit} decimals={dp} /> : <span className="text-ink-3">—</span>}
+                  {v ? <Telemetry value={v} unit={unit} decimals={dp} /> : <span className="text-ink-3">n/a</span>}
                 </dd>
               </div>
             ))}
@@ -569,7 +569,7 @@ export default function Configurator({
             {orphaned.length > 0 && (
               <section className="border-t border-[var(--line)]">
                 <div className="px-4 py-2 flex items-center gap-2">
-                  <h2 className="text-[12.5px] font-medium">Not used in this deployment</h2>
+                  <h2 className="text-[12.5px] font-medium">Not used in this setup</h2>
                   <span className="pill pill-warn">{orphaned.length}</span>
                 </div>
                 <ul className="divide-y divide-[var(--line)] border-t border-[var(--line)]">
@@ -600,7 +600,7 @@ export default function Configurator({
                 </span>
               </div>
               <p className="t-data text-[10px] text-ink-3 leading-relaxed">
-                Priced per order — send it and we reply within one working day with a landed quotation.
+                We price each build individually. Send it and we reply within one working day with a full price, delivered and cleared.
                 {summary.sourcedLines > 0 && ` ${summary.sourcedLines} line${summary.sourcedLines > 1 ? "s" : ""} to source.`}
               </p>
               <Link
@@ -608,7 +608,7 @@ export default function Configurator({
                 className={`btn w-full mt-1 ${buildable ? "btn-primary" : "btn-ghost"}`}
                 aria-disabled={!hasLines}
               >
-                {errors > 0 ? `Quote anyway (${errors} blocking)` : "Request a quote"}
+                {errors > 0 ? `Ask anyway (${errors} problem${errors === 1 ? "" : "s"})` : "Request a quote"}
               </Link>
             </div>
           </div>
@@ -616,20 +616,21 @@ export default function Configurator({
           {/* validation */}
           <div className={`${pane === "checks" ? "block" : "hidden"} lg:block panel`}>
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)]">
-              <span className="t-label">Validation</span>
+              <span className="t-label">Checks</span>
               <span className="t-data text-[10.5px] text-ink-3">
-                {findings.length === 0 ? "nothing to flag" : `${errors} error · ${warns} warn`}
+                {findings.length === 0 ? "all clear" : `${errors} blocking · ${warns} to note`}
               </span>
             </div>
 
             {!hasLines ? (
               <p className="p-4 text-[12.5px] text-ink-2 leading-relaxed">
-                Checks run as you add parts. Socket and lane budgets, memory channel population, power connector
-                counts, chassis clearance, rack depth, fabric coding and mains supply.
+                We check as you add parts: whether things fit together, whether the memory is in the right slots, whether
+                there is enough power and the right cables, whether the card fits the case, whether the case fits the
+                rack, and whether your mains supply can take it.
               </p>
             ) : findings.length === 0 ? (
               <p className="p-4 text-[12.5px] text-ok leading-relaxed">
-                No conflicts found. Every check passed against the parts selected so far.
+                Nothing wrong so far. Everything you have picked works together.
               </p>
             ) : (
               /* Accordion: every finding is one compact row; the detail opens on

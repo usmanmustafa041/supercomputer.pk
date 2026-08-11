@@ -147,7 +147,7 @@ export default function ProductCard({ p, compact = false }: { p: Product; compac
           </dl>
         )}
 
-        {/* No prices anywhere on the storefront — everything is quoted. */}
+        {/* No prices anywhere on the storefront, everything is quoted. */}
         <div className="flex items-end justify-between gap-2 pt-2 border-t border-[var(--line)]">
           <div>
             <div className="t-data text-[12px] font-medium text-acc uppercase tracking-[0.08em]">Get a quote</div>

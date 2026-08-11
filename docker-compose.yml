@@ -7,7 +7,7 @@
 # API docs http://localhost:8000/docs
 #
 # Three containers rather than one so each can be restarted, scaled or replaced
-# on its own — a code change in the website does not take the database down.
+# on its own, a code change in the website does not take the database down.
 
 name: supercomputers
 

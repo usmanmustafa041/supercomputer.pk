@@ -4,11 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BRAND, NAV } from "@/lib/brand";
+import AccountLink from "./AccountLink";
 import Mark from "./Mark";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
   const path = usePathname();
+  // The admin portal brings its own header. Two stacked headers help nobody.
+  const inAdmin = path.startsWith("/admin");
   const [open, setOpen] = useState(false);
   const [stuck, setStuck] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -32,13 +35,17 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // After the hooks, never before: the hook order has to stay the same on
+  // every render.
+  if (inAdmin) return null;
+
   return (
     <header
       className={`sticky top-0 z-50 transition-colors duration-300 ${
         stuck ? "bg-void/92 backdrop-blur-xl border-b" : "bg-transparent border-b border-transparent"
       }`}
     >
-      {/* status strip — real, useful, not a marketing bar */}
+      {/* status strip, real, useful, not a marketing bar */}
       <div className="hidden md:block border-b border-[var(--line)] bg-base/60">
         <div className="shell flex items-center justify-between h-8 text-[11px] t-data text-ink-2">
           <div className="flex items-center gap-5">
@@ -90,7 +97,7 @@ export default function Header() {
             ref={searchRef}
             name="q"
             type="search"
-            placeholder="Search 2,770 parts"
+            placeholder="Search parts"
             aria-label="Search catalog"
             className="field h-9 pr-9 text-[13px]"
           />
@@ -99,7 +106,8 @@ export default function Header() {
           </kbd>
         </form>
 
-        <div className="hidden lg:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-3">
+          <AccountLink className="text-[13px] text-ink-1 hover:text-ink transition-colors" />
           <ThemeToggle />
           <Link href="/configure" className="btn btn-primary btn-sm">
             Configure
@@ -126,7 +134,7 @@ export default function Header() {
             <form action="/catalog" className="mb-3">
               <input name="q" type="search" placeholder="Search parts" className="field" aria-label="Search catalog" />
             </form>
-            {/* Closing on click rather than in an effect keyed on pathname —
+            {/* Closing on click rather than in an effect keyed on pathname:
                 same result, one render pass instead of two. */}
             {NAV.map((n) => (
               <Link
@@ -142,6 +150,7 @@ export default function Header() {
             <Link href="/configure" onClick={() => setOpen(false)} className="btn btn-primary w-full mt-4">
               Open configurator
             </Link>
+            <AccountLink className="block text-center text-[13px] text-ink-2 hover:text-ink mt-3" />
           </div>
         </nav>
       )}

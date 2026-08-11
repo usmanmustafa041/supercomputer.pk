@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, or_, select
 
-from ..auth import CurrentAdmin, DbSession
+from ..auth import CurrentAdmin, CurrentUser, DbSession
 from ..models import Product, Quote, QuoteStatus, User
 from ..schemas import QuoteCreate, QuoteOut, QuotePage, QuoteUpdate, Stats
 
@@ -51,6 +51,22 @@ def submit_quote(body: QuoteCreate, db: DbSession) -> QuoteOut:
     db.commit()
     db.refresh(quote)
     return QuoteOut.model_validate(quote)
+
+
+@public.get("/mine", response_model=list[QuoteOut])
+def my_quotes(user: CurrentUser, db: DbSession) -> list[QuoteOut]:
+    """The signed-in user's own quote requests, newest first.
+
+    Matched on the email as well as the account id, so a request sent before
+    the account existed still shows up once they register with that address.
+    """
+    rows = db.scalars(
+        select(Quote)
+        .where(or_(Quote.user_id == user.id, Quote.contact_email == user.email))
+        .order_by(Quote.created_at.desc())
+        .limit(50)
+    ).all()
+    return [QuoteOut.model_validate(r) for r in rows]
 
 
 @admin.get("/quotes", response_model=QuotePage)

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
  * The hero object: a rack that assembles itself, tilts with the pointer and
  * reports live figures.
  *
- * Everything is CSS 3D transforms on flat elements — no WebGL, no model
+ * Everything is CSS 3D transforms on flat elements, no WebGL, no model
  * loader, no extra bytes. Depth comes from stacked translateZ planes under a
  * shared perspective, which is enough to read as solid once it moves.
  */
@@ -112,7 +112,7 @@ export default function HeroRig() {
             aria-hidden
           />
 
-          {/* rack shell — recessed cavity, deliberately darker than the page */}
+          {/* rack shell, recessed cavity, deliberately darker than the page */}
           <div
             className="absolute inset-0 border"
             style={{

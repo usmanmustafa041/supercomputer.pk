@@ -233,7 +233,7 @@
    * Hide everything, then reveal only the document.
    *
    * This uses visibility rather than display because the print root is nested
-   * several levels inside the layout — a `body > *` display rule hid the very
+   * several levels inside the layout, a `body > *` display rule hid the very
    * wrapper containing it and printed a blank page. Visibility is inherited,
    * so hidden ancestors still let a descendant opt back in, and the ID
    * selector outranks the blanket rule.

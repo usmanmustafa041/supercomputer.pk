@@ -2,7 +2,7 @@
  * Procedural part imagery.
  *
  * 2,770 SKUs and no photo library. Hotlinking retailer photography is both
- * legally dubious and visually incoherent — you get four different lighting
+ * legally dubious and visually incoherent, you get four different lighting
  * setups in one grid. So every part is drawn instead, as a technical
  * elevation: same line weight, same palette, same camera, every time.
  *
@@ -32,7 +32,7 @@ function pick(seed: number, salt: number, min: number, max: number): number {
  *
  * Math.cos and Math.sin can differ by one unit in the last place between
  * Node's V8 and the browser's, so the server serialises 65.07179676972449
- * where the client computes 65.0717967697245 — React reports that as a
+ * where the client computes 65.0717967697245, React reports that as a
  * hydration mismatch. Three decimals is far finer than a 200-unit viewBox can
  * show, and it makes both sides agree exactly.
  */
@@ -129,7 +129,7 @@ function GpuArt({ p, s }: { p: Extract<Product, { kind: "gpu" }>; s: number }) {
         })
       )}
 
-      {/* accent stripe — the one place colour is allowed */}
+      {/* accent stripe, the one place colour is allowed */}
       <rect x={x0} y={y0 + h - 11} width={w} height="1.6" fill={p.eccVram ? COOL : ACC} opacity="0.85" />
 
       {/* pcie edge connector */}
@@ -161,7 +161,7 @@ function CpuArt({ p, s }: { p: Extract<Product, { kind: "cpu" }>; s: number }) {
       <rect x={x0 - 4} y={y0 - 4} width={w + 8} height={h + 8} fill="var(--art-fill)" stroke={INK} />
       <rect x={x0} y={y0} width={w} height={h} rx="2" fill="var(--art-fill-3)" stroke={INK_HI} />
       <rect x={x0 + 6} y={y0 + 6} width={w - 12} height={h - 12} rx="1" fill="var(--art-fill-4)" stroke={INK} strokeWidth="0.7" />
-      {/* notch corner marker — orientation triangle, always present on real parts */}
+      {/* notch corner marker, orientation triangle, always present on real parts */}
       <path d={`M ${x0 + 2} ${y0 + 10} L ${x0 + 2} ${y0 + 2} L ${x0 + 10} ${y0 + 2} Z`} fill={ACC} opacity="0.8" />
       {/* laser etch lines */}
       {[0, 1, 2].map((i) => (
@@ -196,7 +196,7 @@ function DimmArt({ p }: { p: Extract<Product, { kind: "memory" }> }) {
                 <rect key={k} x={40 + k * 14} y={y + 1.5} width="10" height="5" fill="var(--art-fill-3)" stroke={INK} strokeWidth="0.5" />
               ))
             )}
-            {/* register chip — the visual difference between RDIMM and UDIMM */}
+            {/* register chip, the visual difference between RDIMM and UDIMM */}
             {p.registered && <rect x="96" y={y + 1.5} width="9" height="5" fill="var(--art-fill-4)" stroke={ACC} strokeWidth="0.7" />}
             {/* keying notch */}
             <rect x={p.memGen === "ddr5" ? 96 : 86} y={y + 9} width="4" height="2.5" fill="var(--art-void)" />

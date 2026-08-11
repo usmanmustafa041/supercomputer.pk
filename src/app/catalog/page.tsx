@@ -7,8 +7,8 @@ import {
 } from "@/lib/catalog";
 
 export const metadata: Metadata = {
-  title: "Catalog",
-  description: "Every part we sell, filterable by category, condition, brand and budget.",
+  title: "Parts",
+  description: "Every part we sell, with filters for category, condition, brand and budget.",
 };
 
 type SP = Record<string, string | string[] | undefined>;
@@ -16,7 +16,7 @@ type SP = Record<string, string | string[] | undefined>;
 const asArray = (v: string | string[] | undefined): string[] =>
   v == null ? [] : Array.isArray(v) ? v.flatMap((s) => s.split(",")) : v.split(",").filter(Boolean);
 
-/** No price sorts — the storefront is quote-only. */
+/** No price sorts, the storefront is quote-only. */
 const SORTS: Array<[NonNullable<Query["sort"]>, string]> = [
   ["perf", "Capability"],
   ["newest", "Newest"],
@@ -116,13 +116,13 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     q.kind!.length + q.condition!.length + q.segment!.length + q.brand!.length + q.tags!.length + (q.inStockOnly ? 1 : 0);
 
   const heading =
-    q.kind?.length === 1 ? KIND_LABEL[q.kind[0]] : q.text ? `Results for “${q.text}”` : "Full catalog";
+    q.kind?.length === 1 ? KIND_LABEL[q.kind[0]] : q.text ? `Results for “${q.text}”` : "Every part we sell";
 
   return (
     <div className="shell py-9 md:py-12">
       <header className="mb-8">
         <p className="t-eyebrow mb-2.5">
-          {res.total.toLocaleString()} of {catalogSize().toLocaleString()} SKUs
+          {res.total.toLocaleString()} of {catalogSize().toLocaleString()} parts
         </p>
         <h1 className="t-display text-[clamp(1.9rem,4.4vw,3.1rem)]">{heading}</h1>
       </header>

@@ -20,7 +20,7 @@ document.documentElement.setAttribute('data-theme',t);
 }catch(e){document.documentElement.setAttribute('data-theme','light')}})()`;
 
 /**
- * The <html> attribute is the source of truth — it is set by the inline script
+ * The <html> attribute is the source of truth, it is set by the inline script
  * before React exists. Reading it through useSyncExternalStore is how React
  * wants external state consumed: no setState-in-effect, and the server/client
  * difference is handled by the server snapshot rather than being a mismatch.
@@ -75,7 +75,7 @@ export default function ThemeToggle() {
     try {
       localStorage.setItem(THEME_KEY, next);
     } catch {
-      // Private mode or blocked storage — the toggle still works this session.
+      // Private mode or blocked storage, the toggle still works this session.
     }
     window.dispatchEvent(new Event(THEME_EVENT));
   }

@@ -3,7 +3,7 @@
  *
  * Every field here exists because the compatibility engine, the 3D layout or
  * the quotation reads it. If a spec is decorative it belongs in `highlights`,
- * not in the typed body — that keeps `src/lib/compat` honest about what it can
+ * not in the typed body, that keeps `src/lib/compat` honest about what it can
  * actually check.
  */
 
@@ -36,7 +36,7 @@ export type Segment = "datacenter" | "workstation" | "desktop" | "edge";
 
 /** Physical PCIe slot width, in x1/x4/x8/x16 mechanical terms. */
 export type PcieWidth = 1 | 4 | 8 | 16;
-/** Gen 2 is included deliberately — plenty of viable used NICs are PCIe 2.0. */
+/** Gen 2 is included deliberately, plenty of viable used NICs are PCIe 2.0. */
 export type PcieGen = 2 | 3 | 4 | 5 | 6;
 
 export type MoboForm =
@@ -125,7 +125,7 @@ interface Base {
   highlights: string[];
   /** Facet tags for browse: "nvlink", "liquid", "gpu-dense", ... */
   tags: string[];
-  /** Family id this SKU was expanded from — groups variants together. */
+  /** Family id this SKU was expanded from, groups variants together. */
   family: string;
   /**
    * The part as it would be listed on a supplier's price list: no condition
@@ -202,7 +202,7 @@ export interface PcieSlot {
   gen: PcieGen;
   /** Mechanical connector size. */
   width: PcieWidth;
-  /** Lanes actually wired — an x16 slot wired x4 is a classic trap. */
+  /** Lanes actually wired, an x16 slot wired x4 is a classic trap. */
   lanes: PcieWidth;
   /** Slot positions consumed before the next usable slot. */
   spacing: number;
@@ -341,7 +341,7 @@ export interface Nic extends Base {
   tdpW: number;
   rdma: boolean;
   sriov: boolean;
-  /** GPUDirect RDMA — the reason you buy ConnectX for an AI node. */
+  /** GPUDirect RDMA, the reason you buy ConnectX for an AI node. */
   gpuDirect: boolean;
   lowProfile: boolean;
 }
@@ -368,7 +368,7 @@ export interface Optic extends Base {
   gbps: number;
   lengthM: number;
   reachM: number;
-  /** Coded for a vendor's switch — a Mellanox-coded optic sulks in a Cisco. */
+  /** Coded for a vendor's switch, a Mellanox-coded optic sulks in a Cisco. */
   codedFor: string;
   fabric: Fabric;
   powerW: number;
@@ -382,7 +382,7 @@ export interface Rack extends Base {
   widthMm: number;
   depthMm: number;
   staticLoadKg: number;
-  /** Perforation percentage — under 60% chokes dense GPU nodes. */
+  /** Perforation percentage, under 60% chokes dense GPU nodes. */
   perforationPct: number;
   includedPduSlots: number;
   shielded: boolean;

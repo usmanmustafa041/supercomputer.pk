@@ -26,24 +26,24 @@ export interface Slot {
 
 /**
  * Build order matters. Chassis and board first, because almost every other
- * constraint is expressed against them — pick the GPU first and you find out
+ * constraint is expressed against them, pick the GPU first and you find out
  * about the case at the end.
  */
 export const SLOTS: Slot[] = [
-  { kind: "chassis", label: "Chassis", hint: "Sets GPU clearance, cooler height, bay count and airflow. Decide this early.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 1, maxNote: "A node has one chassis. For more machines, quote them as separate nodes." },
-  { kind: "motherboard", label: "Motherboard", hint: "Socket, memory type, slot widths and lane wiring all come from here.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 1, maxNote: "A node has one motherboard. Two machines means two quotes, or a multi-node cluster." },
-  { kind: "cpu", label: "Processor", hint: "Must match the board socket. Quantity must equal populated sockets.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 2, maxNote: "No board here takes more than two sockets." },
-  { kind: "cooler", label: "CPU cooling", hint: "One per socket, rated for peak power — not nameplate TDP.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 2, maxNote: "One heatsink per populated socket." },
-  { kind: "memory", label: "Memory", hint: "Populate every channel. Registered parts will not post in a consumer board.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 24, maxNote: "24 DIMM slots is the largest board in the catalog." },
-  { kind: "gpu", label: "Accelerators", hint: "Check slot width, card length and whether the card has fans of its own.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 8, maxNote: "Eight accelerators is the densest chassis we sell." },
-  { kind: "storage", label: "Storage", hint: "The backplane decides what the bays will actually accept.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 24, maxNote: "24 bays is the largest backplane in the catalog." },
-  { kind: "psu", label: "Power supply", hint: "Sized on peak including GPU transients, with native cables per card.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 4, maxNote: "Beyond four supplies you are describing a rack feed, not a node." },
-  { kind: "nic", label: "Network", hint: "Needs a wide enough slot at a high enough PCIe generation to hit line rate.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 8 },
-  { kind: "switch", label: "Switch", hint: "Port type and fabric must match the adapters.", defaultQty: 1, core: false, targets: ["cluster"], maxPerNode: 4 },
-  { kind: "optic", label: "Optics & cables", hint: "Vendor coding matters — a mis-coded cable simply will not link.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 64 },
-  { kind: "rack", label: "Rack", hint: "Depth and door perforation, not just height.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 1, maxNote: "One cabinet per configuration." },
-  { kind: "pdu", label: "Power distribution", hint: "Above roughly 7.4kW you need three-phase.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 4 },
-  { kind: "ups", label: "UPS", hint: "Sized on peak load. Double-conversion given local grid behaviour.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 4 },
+  { kind: "chassis", label: "Chassis", hint: "The case. It decides how long a graphics card can be, how tall the cooler can be, how many drives fit and how well it breathes. Choose it early.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 1, maxNote: "One case per machine. If you need two machines, add a second one instead." },
+  { kind: "motherboard", label: "Motherboard", hint: "Everything plugs into this. It decides which processor, which memory and how many cards you can fit.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 1, maxNote: "One motherboard per machine. For two machines, switch to a cluster." },
+  { kind: "cpu", label: "Processor", hint: "Has to match the socket on the board, and you need one for every socket you plan to use.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 2, maxNote: "No board we sell takes more than two processors." },
+  { kind: "cooler", label: "CPU cooling", hint: "One per processor, and rated for the heat it actually makes when working hard, not the number on the box.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 2, maxNote: "One cooler per processor." },
+  { kind: "memory", label: "Memory", hint: "Fill the slots evenly or you lose speed. Server memory will not work in a desktop board and the other way round.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 24, maxNote: "24 slots is the most any board we sell has." },
+  { kind: "gpu", label: "Accelerators", hint: "Check it will physically fit, and whether it has its own fans. Server cards do not, and need a case that blows air over them.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 8, maxNote: "Eight cards is the most any case we sell will take." },
+  { kind: "storage", label: "Storage", hint: "The drive bays in your case only accept certain types of drive.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 24, maxNote: "24 bays is the most any case we sell has." },
+  { kind: "psu", label: "Power supply", hint: "Big enough for the worst moment, not the average, with a proper cable for every card.", defaultQty: 1, core: true, targets: ["desk", "rack", "cluster"], maxPerNode: 4, maxNote: "More than four power supplies is a rack problem, not a single machine." },
+  { kind: "nic", label: "Network", hint: "Needs a big enough slot, and a recent enough one, to run at its full speed.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 8 },
+  { kind: "switch", label: "Switch", hint: "The ports have to match the network cards you picked.", defaultQty: 1, core: false, targets: ["cluster"], maxPerNode: 4 },
+  { kind: "optic", label: "Optics & cables", hint: "Cables are often locked to one brand of switch. The wrong one just will not connect.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 64 },
+  { kind: "rack", label: "Rack", hint: "How deep it is and how much air the doors let through, not just how tall.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 1, maxNote: "One rack per build." },
+  { kind: "pdu", label: "Power distribution", hint: "Past about 7.4kW you need a three-phase supply.", defaultQty: 1, core: false, targets: ["rack", "cluster"], maxPerNode: 4 },
+  { kind: "ups", label: "UPS", hint: "Sized for the full load. Given how the grid behaves here, get the always-on type.", defaultQty: 1, core: false, targets: ["desk", "rack", "cluster"], maxPerNode: 4 },
 ];
 
 export function slotsFor(target: Target): Slot[] {
@@ -56,7 +56,7 @@ export function slotsFor(target: Target): Slot[] {
  *
  * The third element pins a variant. Without it, resolution takes the cheapest
  * SKU in the family, which for a power supply means the lowest wattage and for
- * a memory line means a single module — so every preset shipped undersized and
+ * a memory line means a single module, so every preset shipped undersized and
  * with its channels unpopulated. `npm run preset:test` asserts they are all
  * buildable.
  */
@@ -74,7 +74,7 @@ export const PRESETS: Preset[] = [
     id: "ws-dual-ada",
     name: "Dual-GPU AI workstation",
     target: "desk",
-    blurb: "Threadripper PRO, 128GB ECC, two 48GB ECC cards. Fits under a desk on one 230V circuit.",
+    blurb: "A big desktop processor, 128GB of error-correcting memory and two 48GB cards. Fits under a desk on one normal socket.",
     picks: [
       ["fractal-define7-xl", 1],
       // TRX50 rather than WRX90: WRX90 wants three EPS headers and no ATX
@@ -92,7 +92,7 @@ export const PRESETS: Preset[] = [
     id: "rack-inference",
     name: "4U inference node",
     target: "rack",
-    blurb: "EPYC host, passive datacenter cards, redundant CRPS power, U.2 NVMe throughout.",
+    blurb: "Server processor, proper datacenter cards, two power supplies so one can fail, and fast server drives.",
     picks: [
       ["smc-cse-418", 1],
       // E-ATX: the 4U GPU chassis has no ATX standoffs.
@@ -112,7 +112,7 @@ export const PRESETS: Preset[] = [
     id: "budget-lab",
     name: "Budget ECC lab node",
     target: "rack",
-    blurb: "Refurbished Milan platform. The cheapest honest route to 128 PCIe lanes and ECC memory.",
+    blurb: "Refurbished server parts. The cheapest way we know to get plenty of card slots and error-correcting memory.",
     picks: [
       ["smc-cse-745", 1],
       ["h12ssl-i", 1],
@@ -129,13 +129,13 @@ export const PRESETS: Preset[] = [
     id: "local-llm-rig",
     name: "Open-frame local LLM rig",
     target: "desk",
-    blurb: "Four 24GB consumer cards on risers with real spacing. No ECC, no NVLink, considerably cheaper.",
+    blurb: "Four 24GB gaming cards on an open frame with room to breathe. No error correction and the cards cannot talk to each other directly, but much cheaper.",
     picks: [
       // The 12-slot frame: four triple-slot cards consume twelve positions.
       ["mining-frame-12", 1],
       ["wrx80e-sage", 1],
       ["tr-5995wx", 1],
-      // Air, not liquid — an open frame has nowhere to mount a radiator.
+      // Air, not liquid, an open frame has nowhere to mount a radiator.
       ["nh-u14s-tr4", 1],
       ["micron-ddr4-rdimm-3200", 1, "8x32GB"],
       ["rtx-3090", 4],

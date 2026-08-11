@@ -1,6 +1,6 @@
 /**
  * Wordmark glyph: a die on a substrate, drawn as four quadrants with one
- * corner cut — the orientation notch every real processor carries.
+ * corner cut, the orientation notch every real processor carries.
  */
 export default function Mark({ className = "" }: { className?: string }) {
   return (

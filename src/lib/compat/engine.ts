@@ -6,10 +6,10 @@
  * later. Rules that are merely stylistic are marked "gain" and never block.
  *
  * Severity contract:
- *   error — it will not physically fit, or will not post. Blocks checkout.
- *   warn  — it will run, but outside spec, unreliably, or dangerously.
- *   info  — a consequence worth knowing about before ordering.
- *   gain  — a free improvement available for the same money or less.
+ *   error, it will not physically fit, or will not post. Blocks checkout.
+ *   warn , it will run, but outside spec, unreliably, or dangerously.
+ *   info , a consequence worth knowing about before ordering.
+ *   gain , a free improvement available for the same money or less.
  */
 
 // `of()` narrows straight off Product, so the individual kind interfaces are
@@ -52,7 +52,7 @@ function ruleCpuBoard(b: Build, out: Finding[]) {
         rule: "cpu.socket",
         severity: "error",
         title: `${cpu.model} does not fit this board`,
-        detail: `The CPU is ${cpu.socket}. ${mb.brand} ${mb.model} is ${mb.socket}. These are physically different sockets — the chip will not seat.`,
+        detail: `The CPU is ${cpu.socket}. ${mb.brand} ${mb.model} is ${mb.socket}. These are physically different sockets, the chip will not seat.`,
         refs: [cpu.id, mb.id],
         fix: `Pick a ${mb.socket} processor, or change the board to a ${cpu.socket} model.`,
       });
@@ -162,7 +162,7 @@ function ruleCooling(b: Build, out: Finding[]) {
           rule: "cool.capacity",
           severity: short > cpu.maxPowerW * 0.25 ? "error" : "warn",
           title: `${cooler.model} is ${short}W short for ${cpu.model}`,
-          detail: `The cooler is rated ${cooler.tdpRatingW}W. The processor draws up to ${cpu.maxPowerW}W sustained — note that is the real peak, not the ${cpu.tdpW}W nameplate TDP.`,
+          detail: `The cooler is rated ${cooler.tdpRatingW}W. The processor draws up to ${cpu.maxPowerW}W sustained, note that is the real peak, not the ${cpu.tdpW}W nameplate TDP.`,
           refs: [cooler.id, cpu.id],
           fix: `Choose a cooler rated at ${Math.ceil(cpu.maxPowerW / 50) * 50}W or higher.`,
         });
@@ -249,7 +249,7 @@ function ruleMemory(b: Build, out: Finding[]) {
           rule: "mem.speed",
           severity: "info",
           title: `Memory will run below its rating`,
-          detail: `${m.model} is rated ${m.mts} MT/s. ${mb.model} tops out at ${mb.memMaxMts} MT/s, so the modules will clock down. They will work — you are simply paying for speed you cannot use.`,
+          detail: `${m.model} is rated ${m.mts} MT/s. ${mb.model} tops out at ${mb.memMaxMts} MT/s, so the modules will clock down. They will work, you are simply paying for speed you cannot use.`,
           refs: [m.id, mb.id],
           fix: `A ${mb.memMaxMts} MT/s kit costs less and performs identically here.`,
         });
@@ -303,7 +303,7 @@ function ruleMemory(b: Build, out: Finding[]) {
         title: `${modules} modules across ${channels} memory channels`,
         detail: `${cpu.model} has ${cpu.memChannels} channels per socket. With ${modules} modules the population is uneven, so the controller falls back to a slower interleave. On a 12-channel EPYC, running 8 modules costs roughly a third of your memory bandwidth.`,
         refs: [cpu.id, ...mem.map((m) => m.product.id)],
-        fix: `Populate ${good} modules — one per channel, or two per channel throughout.`,
+        fix: `Populate ${good} modules, one per channel, or two per channel throughout.`,
       });
     }
 
@@ -339,7 +339,7 @@ function ruleMemory(b: Build, out: Finding[]) {
     }
   }
 
-  // Tall heatspreaders versus wide air towers — a real and common collision.
+  // Tall heatspreaders versus wide air towers, a real and common collision.
   const tallest = Math.max(0, ...mem.map((m) => m.product.heightMm));
   const bigAir = coolers.find((c) => c.product.type === "air-tower" && c.product.heightMm >= 155);
   if (tallest >= 42 && bigAir) {
@@ -386,7 +386,7 @@ function ruleGpus(b: Build, out: Finding[]) {
           title: `${g.model} is ${g.lengthMm - chassis.maxGpuLengthMm}mm too long`,
           detail: `Card length ${g.lengthMm}mm against ${chassis.maxGpuLengthMm}mm of clearance in ${chassis.model}.`,
           refs: [g.id, chassis.id],
-          fix: "Pick a shorter partner card — dual-fan variants are typically 40-60mm shorter.",
+          fix: "Pick a shorter partner card, dual-fan variants are typically 40-60mm shorter.",
         });
       }
 
@@ -438,7 +438,7 @@ function ruleGpus(b: Build, out: Finding[]) {
         title: `${gpuCount} GPUs, ${x16.length} x16 slots on the board`,
         detail: `${mb.model} provides ${x16.length} mechanical x16 slots.`,
         refs: [mb.id],
-        fix: "Move to a workstation or server board — WRX90 and SP5 boards carry five to seven full slots.",
+        fix: "Move to a workstation or server board, WRX90 and SP5 boards carry five to seven full slots.",
       });
     }
 
@@ -449,7 +449,7 @@ function ruleGpus(b: Build, out: Finding[]) {
         rule: "gpu.laneWidth",
         severity: "warn",
         title: "At least one GPU will land in a narrower slot",
-        detail: `${mb.model} wires ${wired8OrLess} of its x16 slots at x8 or less. The card fits and works, but bandwidth to host memory is halved — that shows up in multi-GPU training, not in gaming.`,
+        detail: `${mb.model} wires ${wired8OrLess} of its x16 slots at x8 or less. The card fits and works, but bandwidth to host memory is halved, that shows up in multi-GPU training, not in gaming.`,
         refs: [mb.id, ...gpus.map((g) => g.product.id)],
       });
     }
@@ -468,7 +468,7 @@ function ruleGpus(b: Build, out: Finding[]) {
     }
   }
 
-  // CPU lane budget — the constraint people forget until the board posts with
+  // CPU lane budget, the constraint people forget until the board posts with
   // half its slots disabled.
   const cpu = first(cpus)?.product;
   if (cpu) {
@@ -501,7 +501,7 @@ function ruleGpus(b: Build, out: Finding[]) {
       rule: "gpu.nvlinkSolo",
       severity: "gain",
       title: "NVLink capability unused with a single card",
-      detail: `${nvlinkCards[0].product.model} supports NVLink. A second identical card plus a bridge gives you one pooled memory space — ${nvlinkCards[0].product.vramGb * 2}GB — rather than two isolated ones.`,
+      detail: `${nvlinkCards[0].product.model} supports NVLink. A second identical card plus a bridge gives you one pooled memory space, ${nvlinkCards[0].product.vramGb * 2}GB, rather than two isolated ones.`,
       refs: [nvlinkCards[0].product.id],
     });
   }
@@ -779,7 +779,7 @@ function rulePower(b: Build, out: Finding[]) {
         severity: "info",
         title: `${psu.model} requires 200-240V input`,
         detail:
-          "That suits Pakistan's 230V mains and the unit will deliver full rated output. Worth knowing if the machine is ever moved to a 110V region — it will not start there.",
+          "That suits Pakistan's 230V mains and the unit will deliver full rated output. Worth knowing if the machine is ever moved to a 110V region, it will not start there.",
         refs: [psu.id],
       });
     }
@@ -826,7 +826,7 @@ function rulePower(b: Build, out: Finding[]) {
       severity: "error",
       title: `Board wants ${mb.epsHeaders} EPS connectors, supply has ${conn["eps-8"] ?? 0}`,
       detail:
-        "High-core-count processors pull more than one 8-pin EPS cable can carry. Leaving a header empty causes shutdowns under all-core load, not at idle — so it passes a quick test and fails a real job.",
+        "High-core-count processors pull more than one 8-pin EPS cable can carry. Leaving a header empty causes shutdowns under all-core load, not at idle, so it passes a quick test and fails a real job.",
       refs: [mb.id, ...psus.map((p) => p.product.id)],
     });
   }
@@ -861,14 +861,14 @@ function rulePower(b: Build, out: Finding[]) {
   }
 
   // Pakistan-specific: a 16A domestic circuit is 3.68kW, but continuous load
-  // should not exceed 80% of that — so ~2.9kW is the real working ceiling.
+  // should not exceed 80% of that, so ~2.9kW is the real working ceiling.
   if (power.peakW > 2900 && b.target === "desk") {
     push(out, {
       rule: "power.circuit",
       severity: "warn",
       title: `${power.amps230}A continuous on a single 230V circuit`,
       detail:
-        "A standard 16A Pakistani domestic circuit is rated 3.68kW, and continuous load should stay under 80% of that — about 2.9kW. Everything else on the same ring shares it. This build will trip the breaker under sustained load.",
+        "A standard 16A Pakistani domestic circuit is rated 3.68kW, and continuous load should stay under 80% of that, about 2.9kW. Everything else on the same ring shares it. This build will trip the breaker under sustained load.",
       refs: [],
       fix: "Have a dedicated 20A radial circuit run for the machine, or split the load across two supplies on separate circuits.",
     });
@@ -925,7 +925,7 @@ function ruleChassis(b: Build, out: Finding[]) {
       severity: "warn",
       title: `${chassis.model} is a ${chassis.rackU}U rack chassis`,
       detail:
-        "Rack servers run 40mm fans at high static pressure. Next to a desk they are genuinely loud — 60 dBA and up under load — and they draw air from the front and dump it out the back into whoever is sitting behind.",
+        "Rack servers run 40mm fans at high static pressure. Next to a desk they are genuinely loud, 60 dBA and up under load, and they draw air from the front and dump it out the back into whoever is sitting behind.",
       refs: [chassis.id],
       fix: "For a desk-side machine, a tower chassis with 140mm fans is far quieter.",
     });
@@ -1024,7 +1024,7 @@ function ruleFabric(b: Build, out: Finding[]) {
         rule: "optic.coding",
         severity: "warn",
         title: `${o.model} is coded for ${o.codedFor}`,
-        detail: `The build uses ${brands.join(" and ")} equipment. Most switches read the module's EEPROM and refuse to bring the port up if the vendor string does not match. The cable is electrically fine — the firmware just will not accept it.`,
+        detail: `The build uses ${brands.join(" and ")} equipment. Most switches read the module's EEPROM and refuse to bring the port up if the vendor string does not match. The cable is electrically fine, the firmware just will not accept it.`,
         refs: [o.id],
         fix: `Order the ${brands[0]}-coded version of the same cable.`,
       });
@@ -1253,7 +1253,7 @@ function ruleHygiene(b: Build, out: Finding[]) {
     });
   }
 
-  // Condition mixing — legitimate, but worth surfacing before purchase.
+  // Condition mixing, legitimate, but worth surfacing before purchase.
   const pulls = b.lines.filter((l) => l.product.condition === "pull" || l.product.condition === "refurb-b");
   if (pulls.length && b.target === "cluster") {
     push(out, {
@@ -1261,7 +1261,7 @@ function ruleHygiene(b: Build, out: Finding[]) {
       severity: "info",
       title: `${pulls.length} line${pulls.length > 1 ? "s are" : " is"} tested-pull or Grade B`,
       detail:
-        "Fine for compute nodes where a failure just re-queues the job. Think harder about it for the head node, storage or the fabric — those are single points of failure.",
+        "Fine for compute nodes where a failure just re-queues the job. Think harder about it for the head node, storage or the fabric, those are single points of failure.",
       refs: pulls.map((l) => l.product.id),
     });
   }
@@ -1273,7 +1273,7 @@ function ruleHygiene(b: Build, out: Finding[]) {
       severity: "warn",
       title: "Non-ECC memory in a server build",
       detail:
-        "At server memory capacities, single-bit errors are a matter of when rather than if. Without ECC they corrupt results silently — a long training run finishes and the numbers are simply wrong.",
+        "At server memory capacities, single-bit errors are a matter of when rather than if. Without ECC they corrupt results silently, a long training run finishes and the numbers are simply wrong.",
       refs: b.lines.filter((l) => l.product.kind === "memory" && !l.product.ecc).map((l) => l.product.id),
     });
   }

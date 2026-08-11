@@ -80,7 +80,7 @@ class ProductCreate(ProductBase):
 
 
 class ProductUpdate(BaseModel):
-    """Every field optional — this is a PATCH, not a replace."""
+    """Every field optional, this is a PATCH, not a replace."""
 
     slug: str | None = None
     kind: str | None = None

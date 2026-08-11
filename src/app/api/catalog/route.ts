@@ -9,7 +9,7 @@ export const runtime = "nodejs";
  *
  * Returns whole Product objects rather than a slim projection, because the
  * compatibility engine runs in the browser and needs every spec field. Only
- * the requested page travels, so this stays small — 24 parts, not 2,770.
+ * the requested page travels, so this stays small, 24 parts, not 2,770.
  *
  *   ?kind=gpu&q=5090&page=1     browse/search within a category
  *   ?ids=G-ABC,C-DEF            rehydrate a shared build from the URL
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
 
   /**
-   * ?chassisFor=rack&ids=…  — re-home a build into a chassis that suits a new
+   * ?chassisFor=rack&ids=… , re-home a build into a chassis that suits a new
    * deployment target, keeping every other part. Runs server-side because it
    * scores the whole chassis catalog against the build's real constraints.
    */
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
   if (families) {
     /**
      * Resolve one SKU per family. `key:hint` pins a variant by substring of
-     * the model name — without it a power-supply family resolves to its
+     * the model name, without it a power-supply family resolves to its
      * cheapest, lowest-wattage member and every preset ships undersized.
      */
     const wanted = new Map<string, string | null>();

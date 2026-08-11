@@ -53,7 +53,7 @@ def seed_catalog(db) -> None:
     if db.scalar(select(func.count(Product.id))):
         return
     if not SEED_FILE.exists():
-        log.warning("No seed file at %s — starting with an empty catalog.", SEED_FILE)
+        log.warning("No seed file at %s, starting with an empty catalog.", SEED_FILE)
         return
 
     payload = json.loads(SEED_FILE.read_text(encoding="utf-8"))

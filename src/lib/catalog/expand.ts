@@ -93,7 +93,7 @@ function money(usd: number, cond: Condition, seed: string, kind: "part" | "syste
 }
 
 /**
- * Stock. Anything above USD 8k is indent-only — we do not sit on H100s, and
+ * Stock. Anything above USD 8k is indent-only, we do not sit on H100s, and
  * pretending otherwise in the UI would be a lie the customer discovers late.
  */
 function avail(seed: string, usd: number, cond: Condition): Availability {
@@ -128,7 +128,7 @@ const TIERS: Record<string, Tier[]> = {
   ],
   MSI: [
     { suffix: "SUPRIM X", power: 1.06, lenAdd: 25, slotAdd: 0.5, price: 1.19, note: "Brushed alloy shroud, MSI's top bin" },
-    { suffix: "GAMING TRIO OC", power: 1.03, lenAdd: 15, slotAdd: 0, price: 1.1, note: "The volume seller — TRI FROZR cooler, mild factory OC" },
+    { suffix: "GAMING TRIO OC", power: 1.03, lenAdd: 15, slotAdd: 0, price: 1.1, note: "The volume seller, TRI FROZR cooler, mild factory OC" },
     { suffix: "VENTUS 3X", power: 1.0, lenAdd: 5, slotAdd: 0, price: 1.02, note: "Reference clocks, plainest cooler, cheapest entry to the die" },
   ],
   GIGABYTE: [
@@ -139,7 +139,7 @@ const TIERS: Record<string, Tier[]> = {
   ZOTAC: [
     { suffix: "AMP Extreme AIRO", power: 1.05, lenAdd: 20, slotAdd: 0.5, price: 1.14, note: "ZOTAC's halo cooler, generous power limit headroom" },
     { suffix: "Trinity OC", power: 1.02, lenAdd: 8, slotAdd: 0, price: 1.05, note: "Compact triple-fan, fits smaller cases than most" },
-    { suffix: "Twin Edge", power: 1.0, lenAdd: -20, slotAdd: -0.5, price: 1.0, note: "Two fans and a short PCB — the SFF answer" },
+    { suffix: "Twin Edge", power: 1.0, lenAdd: -20, slotAdd: -0.5, price: 1.0, note: "Two fans and a short PCB, the SFF answer" },
   ],
   Palit: [
     { suffix: "GameRock OC", power: 1.04, lenAdd: 18, slotAdd: 0.5, price: 1.11, note: "Crystal shroud, strong cooler for the money" },
@@ -158,7 +158,7 @@ const TIERS: Record<string, Tier[]> = {
     { suffix: "VERTO", power: 1.0, lenAdd: 0, slotAdd: 0, price: 1.0, note: "Reference design and clocks" },
   ],
   Galax: [
-    { suffix: "HOF OC Lab", power: 1.07, lenAdd: 26, slotAdd: 0.5, price: 1.22, note: "Hall of Fame bin — binned die, white PCB, extreme power limit" },
+    { suffix: "HOF OC Lab", power: 1.07, lenAdd: 26, slotAdd: 0.5, price: 1.22, note: "Hall of Fame bin, binned die, white PCB, extreme power limit" },
     { suffix: "EX Gamer", power: 1.01, lenAdd: 8, slotAdd: 0, price: 1.03, note: "Mainstream Galax card" },
   ],
   Sapphire: [
@@ -292,7 +292,7 @@ function expandCpus(): Cpu[] {
           releaseYear: f.year,
           highlights: [
             ...f.highlights,
-            pack.boxed ? "Boxed retail package, heatsink included" : "Tray part — no heatsink, order cooling separately",
+            pack.boxed ? "Boxed retail package, heatsink included" : "Tray part, no heatsink, order cooling separately",
           ],
           tags: [...f.tags, f.socket.toLowerCase(), f.brand.toLowerCase()],
           socket: f.socket,
@@ -395,7 +395,7 @@ function expandMemory(): Memory[] {
           const seed = `mem:${f.key}:${cap}:${kitSize}:${cond}`;
           const id = `R-${fnv1a(seed).toString(36).toUpperCase().padStart(7, "0")}`;
           const label = kitSize === 1 ? `${cap}GB Module` : `${totalGb}GB Kit (${kitSize}x${cap}GB)`;
-          // Bigger modules cost more per GB — the density premium is real.
+          // Bigger modules cost more per GB, the density premium is real.
           const densityPremium = cap >= 128 ? 1.35 : cap >= 64 ? 1.12 : 1.0;
 
           out.push({
@@ -626,7 +626,7 @@ function expandOptics(): Optic[] {
           slug: slugify(`${f.brand}-${f.name}-${lenLabel}-${coded}-${id.slice(-4)}`),
           kind: "optic",
           brand: f.brand,
-          model: `${f.name} ${lenLabel} — ${coded} coded`,
+          model: `${f.name} ${lenLabel}, ${coded} coded`,
           mpn: `${f.key.toUpperCase()}-${len}M-${coded.slice(0, 4).toUpperCase()}`,
           condition: "new",
           segment: f.segment,

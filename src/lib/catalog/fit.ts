@@ -6,7 +6,7 @@
  * enclosure, then finds the smallest chassis that satisfies all of it and
  * suits the new target.
  *
- * Pure functions over the catalog — no React, no network.
+ * Pure functions over the catalog, no React, no network.
  */
 
 import { getByKind } from "./index";
@@ -85,7 +85,7 @@ export function chassisNeeds(lines: Line[]): ChassisNeeds {
   return need;
 }
 
-/** Which drives a backplane will accept — mirrors the compat engine's table. */
+/** Which drives a backplane will accept, mirrors the compat engine's table. */
 const BACKPLANE_ACCEPTS: Record<string, string[]> = {
   u2: ["u2"],
   u3: ["u3", "u2", "sata", "sas3", "sas4"],

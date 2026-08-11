@@ -15,16 +15,15 @@ export default function Home() {
   const inStock = search({ inStockOnly: true, sort: "perf", perPage: 4 }).items;
   const heldLines = search({ inStockOnly: true, perPage: 1 }).total;
 
-  // Ticker content: real catalog extremes, not invented marketing numbers.
+  // Ticker content: real catalog numbers, not invented marketing ones.
   const ticker = [
-    `${total.toLocaleString()} SKUs`,
-    "50 compatibility rules",
+    `${total.toLocaleString()} parts listed`,
+    "50 compatibility checks",
     "6 condition grades",
-    `${heldLines.toLocaleString()} lines in stock`,
-    "230V / 3-phase aware",
-    "Quotes in one working day",
-    "72h burn-in on systems",
-    "NDR400 InfiniBand",
+    `${heldLines.toLocaleString()} items in stock`,
+    "Built for 230V and generators",
+    "Quotes within one working day",
+    "Every system run for 72 hours before it ships",
     "Lahore · Karachi · Islamabad",
   ];
 
@@ -58,8 +57,8 @@ export default function Home() {
               className="mt-6 text-[16px] md:text-[18px] leading-relaxed text-ink-1 max-w-lg rise"
               style={{ animationDelay: "120ms" }}
             >
-              Refurbished HPC clusters, GPU servers and AI workstations. Configure it here and we check every
-              socket, lane, watt and millimetre before you pay.
+              Refurbished servers, GPU machines and AI workstations. Put the parts together here and we
+              check that they fit, power up and stay cool before you pay for anything.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3 rise" style={{ animationDelay: "180ms" }}>
@@ -98,9 +97,9 @@ export default function Home() {
       <section className="border-b border-[var(--line)]">
         <div className="shell py-12 md:py-16">
           <div className="flex items-end justify-between gap-4 mb-7">
-            <h2 className="t-display text-[clamp(1.6rem,3.4vw,2.4rem)]">Die to rack door</h2>
+            <h2 className="t-display text-[clamp(1.6rem,3.4vw,2.4rem)]">Everything we sell</h2>
             <Link href="/catalog" className="btn btn-ghost btn-sm">
-              All 15
+              All 15 categories
             </Link>
           </div>
 
@@ -131,16 +130,17 @@ export default function Home() {
           <div>
             <p className="t-eyebrow mb-3">The configurator</p>
             <h2 className="t-display text-[clamp(1.9rem,4.4vw,3.2rem)]">
-              Swap a part.
+              Change a part.
               <br />
-              Watch it break.
+              See what breaks.
             </h2>
             <p className="mt-5 text-[15px] leading-relaxed text-ink-1 max-w-md">
-              Passive cards in a tower. Four GPUs on one 12VHPWR lead. A chassis 80mm too deep for the rack.
-              Fifty rules, and each one says what to do instead.
+              A server card with no fan of its own, dropped into a desktop case. Four graphics cards
+              sharing one power cable. A case 80mm too deep for the rack it has to go in. Fifty checks
+              run as you build, and each one tells you what to do instead.
             </p>
             <Link href="/rules" className="btn btn-ghost mt-7">
-              Read the rules
+              See what we check
             </Link>
           </div>
 
@@ -152,9 +152,9 @@ export default function Home() {
       <section className="border-b border-[var(--line)]">
         <div className="shell py-12 md:py-16">
           <div className="flex items-end justify-between gap-4 mb-7">
-            <h2 className="t-display text-[clamp(1.6rem,3.4vw,2.4rem)]">Racked and running</h2>
+            <h2 className="t-display text-[clamp(1.6rem,3.4vw,2.4rem)]">Ready-made systems</h2>
             <Link href="/systems" className="btn btn-ghost btn-sm">
-              All systems
+              See all systems
             </Link>
           </div>
 
@@ -173,7 +173,7 @@ export default function Home() {
                   <h3 className="t-display text-[19px] mt-1.5 group-hover:text-acc transition-colors">{sys.model}</h3>
                   <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-[var(--line)] pt-2.5">
                     {[
-                      ["GPU", sys.gpuCount || "—"],
+                      ["GPU", sys.gpuCount || 0],
                       ["Cores", sys.coresTotal],
                       ["kW", (sys.peakPowerW / 1000).toFixed(1)],
                     ].map(([k, v]) => (
@@ -199,10 +199,10 @@ export default function Home() {
           <div className="shell py-12 md:py-16">
             <div className="flex items-end justify-between gap-4 mb-7">
               <h2 className="t-display text-[clamp(1.6rem,3.4vw,2.4rem)] flex items-center gap-3">
-                <span className="live-dot" /> On the shelf
+                <span className="live-dot" /> In stock right now
               </h2>
               <Link href="/catalog?stock=1" className="btn btn-ghost btn-sm">
-                Everything in stock
+                See everything in stock
               </Link>
             </div>
             <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -218,9 +218,9 @@ export default function Home() {
       <section className="border-b border-[var(--line)]">
         <div className="shell py-12 md:py-16 grid gap-px bg-[var(--line)] md:grid-cols-3 border border-[var(--line)] mt-0">
           {[
-            ["Graded honestly", "Six condition grades, each with a written test regime and warranty term. Tested pulls are labelled as tested pulls.", "/grading"],
-            ["Stocked and supported", "Everything ships from our own inventory or our own import channel. One supplier, one invoice, one warranty to call on.", "/catalog"],
-            ["Specified locally", "230V mains, three-phase past 7.4kW, load-shedding and generator transfer. The rules account for all of it.", "/rules"],
+            ["We say what condition it is in", "Six grades, each with a written list of the tests it passed and how long it is covered for. If a part came out of a working machine, we say so.", "/grading"],
+            ["It all comes from us", "Every part is from our own stock or brought in on our own import licence. One company to buy from, one invoice, one warranty to call on.", "/catalog"],
+            ["Built for how power works here", "230V mains, three-phase once the load gets big, load-shedding and switching over to a generator. The checks take all of that into account.", "/rules"],
           ].map(([title, body, href]) => (
             <Link key={title} href={href} className="bg-[var(--color-surface)] p-6 md:p-8 group hover:bg-[var(--color-raised)] transition-colors">
               <h3 className="t-display text-[20px] group-hover:text-acc transition-colors">{title}</h3>
@@ -235,14 +235,14 @@ export default function Home() {
         <div className="shell py-14 md:py-20">
           <div className="border border-[var(--line)] p-8 md:p-14 hatch text-center">
             <h2 className="t-display text-[clamp(1.8rem,4.4vw,3rem)] max-w-2xl mx-auto">
-              Tell us the workload, not the part numbers.
+              Tell us what you need it to do. We will work out the parts.
             </h2>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
-              <Link href="/quote" className="btn btn-primary">
-                Request a quote
+              <Link href="/configure" className="btn btn-primary">
+                Build one now
               </Link>
-              <Link href="/configure" className="btn btn-ghost">
-                Configure it yourself
+              <Link href="/systems" className="btn btn-ghost">
+                Start from a ready-made system
               </Link>
             </div>
           </div>

@@ -1,7 +1,7 @@
 """Settings, read from the environment.
 
 Everything with a sensible local default so `docker compose up` works with no
-setup, but nothing secret is hard-coded — SECRET_KEY must be set in anything
+setup, but nothing secret is hard-coded, SECRET_KEY must be set in anything
 resembling production and the app refuses to start with the default there.
 """
 
@@ -56,6 +56,6 @@ def get_settings() -> Settings:
     if s.is_production and s.secret_key == "dev-only-change-me":
         raise RuntimeError(
             "SECRET_KEY is still the development default. Set a real one before "
-            "running in production — every issued token would otherwise be forgeable."
+            "running in production, every issued token would otherwise be forgeable."
         )
     return s

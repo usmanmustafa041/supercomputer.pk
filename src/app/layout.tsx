@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Archivo } from "next/font/google";
 import { BRAND } from "@/lib/brand";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
+import SiteOnly from "@/components/site/SiteOnly";
 import { THEME_SCRIPT } from "@/components/site/ThemeToggle";
 import "./globals.css";
 
@@ -18,7 +19,7 @@ const display = Archivo({
 
 export const metadata: Metadata = {
   title: {
-    default: `${BRAND.name} — ${BRAND.tagline}`,
+    default: `${BRAND.name}, ${BRAND.tagline}`,
     template: `%s · ${BRAND.name}`,
   },
   description: BRAND.strapline,
@@ -49,7 +50,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main" className="flex-1">
           {children}
         </main>
-        <Footer />
+        <SiteOnly>
+          <Footer />
+        </SiteOnly>
       </body>
     </html>
   );

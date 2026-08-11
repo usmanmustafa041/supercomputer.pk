@@ -15,7 +15,7 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
         ["Silicon", [
           ["Architecture", p.arch],
           ["Form factor", p.formFactor === "pcie" ? `PCIe ${p.pcieGen}.0 x${p.pcieWidth}` : `${p.formFactor.toUpperCase()} module`],
-          ["Slot width", p.formFactor === "pcie" ? `${p.slotsWide} slots` : "n/a — baseboard mounted"],
+          ["Slot width", p.formFactor === "pcie" ? `${p.slotsWide} slots` : "n/a, baseboard mounted"],
           ["Card length", p.lengthMm ? mm(p.lengthMm) : "n/a"],
         ]],
         ["Memory", [
@@ -34,13 +34,13 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
           ["Board power", w(p.tdpW)],
           ["Recommended supply", p.psuRecW ? w(p.psuRecW) : "System dependent"],
           ["Connectors", p.connectors.length ? p.connectors.join(", ").toUpperCase() : "Slot power only"],
-          ["Cooling", p.cooling === "passive" ? "Passive — needs chassis airflow" : p.cooling],
+          ["Cooling", p.cooling === "passive" ? "Passive, needs chassis airflow" : p.cooling],
         ]],
         ["Platform features", [
           ["NVLink", yn(p.nvlink)],
           ["MIG partitioning", yn(p.mig)],
           ["vGPU licensable", yn(p.vgpuLicensable)],
-          ["Display outputs", p.displayOutputs ? String(p.displayOutputs) : "None — compute only"],
+          ["Display outputs", p.displayOutputs ? String(p.displayOutputs) : "None, compute only"],
         ]],
       ];
 
@@ -96,7 +96,7 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
         ["Expansion", [
           ...p.pcieSlots.map((s, i): [string, string] => [
             `Slot ${i + 1}`,
-            `Gen ${s.gen}.0 x${s.width} mechanical, x${s.lanes} wired${s.lanes < s.width ? " — narrower than it looks" : ""}`,
+            `Gen ${s.gen}.0 x${s.width} mechanical, x${s.lanes} wired${s.lanes < s.width ? ", narrower than it looks" : ""}`,
           ]),
         ]],
         ["Storage & network", [
@@ -124,7 +124,7 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
           ["CAS latency", `CL${p.casLatency}`],
           ["Voltage", `${p.voltage} V`],
           ["ECC", yn(p.ecc)],
-          ["Registered", p.registered ? "Yes — server boards only" : "No — unbuffered"],
+          ["Registered", p.registered ? "Yes, server boards only" : "No, unbuffered"],
           ["Height", mm(p.heightMm)],
         ]],
       ];
@@ -145,8 +145,8 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
           ["Random write", `${p.writeIops.toLocaleString()} IOPS`],
         ]],
         ["Endurance & power", [
-          ["Endurance", p.dwpd ? `${p.dwpd} DWPD` : "Mechanical — not rated in DWPD"],
-          ["Power-loss protection", p.powerLossProtection ? "Yes — onboard capacitors" : "No"],
+          ["Endurance", p.dwpd ? `${p.dwpd} DWPD` : "Mechanical, not rated in DWPD"],
+          ["Power-loss protection", p.powerLossProtection ? "Yes, onboard capacitors" : "No"],
           ["Active power", w(p.tdpW)],
         ]],
       ];
@@ -163,18 +163,18 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
           ["Form factor", p.form.toUpperCase()],
           ["Depth", mm(p.depthMm)],
           ["Modular", p.modular],
-          ["Input voltage", `${p.inputVoltsMin}-240 V${p.inputVoltsMin >= 200 ? " — suits 230V Pakistani mains" : ""}`],
+          ["Input voltage", `${p.inputVoltsMin}-240 V${p.inputVoltsMin >= 200 ? ", suits 230V Pakistani mains" : ""}`],
         ]],
         ["Connectors", Object.entries(p.connectors).length
           ? Object.entries(p.connectors).map(([k, v]): [string, string] => [k.toUpperCase(), `${v}`])
-          : [["Cabling", "Fixed backplane — chassis provides distribution"]]],
+          : [["Cabling", "Fixed backplane, chassis provides distribution"]]],
       ];
 
     case "chassis":
       return [
         ["Form", [
           ["Type", p.form.replace("-", " ")],
-          ["Rack units", p.rackU ? `${p.rackU}U` : "Tower — not rack mounted"],
+          ["Rack units", p.rackU ? `${p.rackU}U` : "Tower, not rack mounted"],
           ["Depth", mm(p.depthMm)],
           ["Weight", `${p.weightKg} kg`],
           ["Board support", p.moboForms.join(", ").toUpperCase()],
@@ -189,10 +189,10 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
         ]],
         ["Storage & airflow", [
           ["Hot-swap bays", String(p.hotSwapBays)],
-          ["Backplane", p.backplane === "none" ? "None — internal mounting only" : p.backplane.toUpperCase()],
+          ["Backplane", p.backplane === "none" ? "None, internal mounting only" : p.backplane.toUpperCase()],
           ['3.5" bays', String(p.bays35)],
           ['2.5" bays', String(p.bays25)],
-          ["Forced airflow", p.forcedAirflow ? "Yes — passive cards supported" : "No — active cooling required"],
+          ["Forced airflow", p.forcedAirflow ? "Yes, passive cards supported" : "No, active cooling required"],
         ]],
       ];
 
@@ -207,7 +207,7 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
         ["Fitment", [
           ["Height", p.heightMm ? mm(p.heightMm) : "n/a"],
           ["Radiator", p.radiatorMm ? mm(p.radiatorMm) : "n/a"],
-          ["Chassis airflow required", p.needsChassisAirflow ? "Yes — will not work in a tower" : "No"],
+          ["Chassis airflow required", p.needsChassisAirflow ? "Yes, will not work in a tower" : "No"],
         ]],
       ];
 
@@ -256,10 +256,10 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
           ["Fabric", p.fabric === "both" ? "InfiniBand or Ethernet" : p.fabric],
         ]],
         ["Reach & coding", [
-          ["Length", p.lengthM ? `${p.lengthM} m` : "Module only — fibre ordered separately"],
+          ["Length", p.lengthM ? `${p.lengthM} m` : "Module only, fibre ordered separately"],
           ["Max reach", `${p.reachM} m`],
           ["Vendor coding", p.codedFor],
-          ["Power", p.powerW ? w(p.powerW) : "Passive — no power draw"],
+          ["Power", p.powerW ? w(p.powerW) : "Passive, no power draw"],
         ]],
       ];
 
@@ -315,7 +315,7 @@ export function specGroups(p: Product): Array<[string, Array<[string, string]>]>
           ["Processors", p.cpuModel],
           ["Sockets", String(p.cpuSockets)],
           ["Total cores", String(p.coresTotal)],
-          ["Accelerators", p.gpuModel ? `${p.gpuCount} x ${p.gpuModel}` : "None — CPU only"],
+          ["Accelerators", p.gpuModel ? `${p.gpuCount} x ${p.gpuModel}` : "None, CPU only"],
           ["BF16 aggregate", p.bf16Tflops ? `${p.bf16Tflops} TFLOPS` : "n/a"],
         ]],
         ["Memory & storage", [

@@ -4,7 +4,7 @@ A storefront and configurator for refurbished HPC hardware sold in Pakistan: clu
 workstations and every component that goes into them. The interesting part is not the shop, it is the
 compatibility engine behind the configurator.
 
-Next.js 16 (App Router), React 19, Tailwind v4, TypeScript. No database — the catalog is generated.
+Next.js 16 (App Router), React 19, Tailwind v4, TypeScript. No database, the catalog is generated.
 
 ```
 npm install
@@ -19,13 +19,13 @@ hand-authored **families**, one per real part, carrying real vendor specs. `expa
 2,777 shipping SKUs across three axes that genuinely exist in this market:
 
 - **Board partner and tier.** One die goes to ASUS, MSI, Gigabyte, ZOTAC and the rest, each shipping two or
-  three tiers. The tiers are not cosmetic — a ROG Strix is longer, thicker and pulls more power than a
+  three tiers. The tiers are not cosmetic, a ROG Strix is longer, thicker and pulls more power than a
   Ventus, and the expander adjusts length, slot width, TDP, recommended PSU and price accordingly.
 - **Condition grade.** Six of them, each with its own price factor and warranty term.
 - **Capacity and configuration.** Memory kits by module size and count, drives by capacity, supplies by
   wattage, cables by length and vendor coding.
 
-Expansion is deterministic — a seeded hash, not `Math.random()` — so a SKU id generated during the build
+Expansion is deterministic, a seeded hash, not `Math.random()`, so a SKU id generated during the build
 matches the one generated in the browser. `npm run catalog:stats` prints the composition and asserts zero
 id or slug collisions.
 
@@ -64,7 +64,7 @@ catalog is correctly typed VPI rather than InfiniBand-only.
 `/configure` renders the build as a to-scale 3D scene (three.js via react-three-fiber). Orbit, zoom, pan;
 drag a slot from the parts list into the case; click a part to isolate and label it.
 
-There is no model library. Every box is generated from the catalog's own millimetre figures — card length,
+There is no model library. Every box is generated from the catalog's own millimetre figures, card length,
 slot thickness at the 20.32mm PCIe pitch, cooler height, board form factor, PSU depth, chassis clearance,
 rack U. **The geometry is the compatibility data.** A card 30mm longer than the case clearance is drawn
 30mm too long, turns red and visibly punches through the panel, rather than only producing a line of text.
@@ -76,7 +76,7 @@ generated geometry is always exactly as accurate as the spec sheet and covers al
 mirroring bugs below were found.
 
 The deployment target (desk / rack / cluster) drives the empty volume when no case is chosen, and once a
-case *is* chosen a pair of rules catch the mismatch — a tower cannot be racked, a rack chassis next to a
+case *is* chosen a pair of rules catch the mismatch, a tower cannot be racked, a rack chassis next to a
 desk is 60 dBA. Without those the target buttons changed the rule set and the slot list but nothing you
 could see, which reads as broken.
 
@@ -92,7 +92,7 @@ Things that bit me, all visible only once rendered:
 
 ## Inventory and quoting
 
-We are the store. Everything comes from our own stock or our own import channel — there is no outbound
+We are the store. Everything comes from our own stock or our own import channel, there is no outbound
 linking to other retailers anywhere on the site. `Availability` on each SKU carries `inHouse`, `leadDays`
 and `indentOnly`, and the product page states which of the three applies in plain words.
 
@@ -104,7 +104,7 @@ verification script were removed rather than left dormant.
 layer because the quotation needs it, but it never reaches a screen.
 
 `/quote` collects the configuration, the customer and the workload, then produces a **printable A4
-requirement document** — brand header with a `SC-YYYYMMDD-XXXX` reference, the itemised configuration with
+requirement document**, brand header with a `SC-YYYYMMDD-XXXX` reference, the itemised configuration with
 condition grade and SKU, derived figures (peak draw, current at 230V, heat, rack units, cores, memory,
 BF16), and the full compatibility report with blocking findings separated from warnings.
 
@@ -114,7 +114,7 @@ one place instead of being written twice. `src/app/quote/print.css` owns the A4 
 ink-friendly palette, because the site is dark and a dark background prints as a solid black page.
 
 One trap worth recording: the first print stylesheet hid non-document content with
-`body > *:not(#quote-print-root)`, which printed a blank page — the print root is nested several levels
+`body > *:not(#quote-print-root)`, which printed a blank page, the print root is nested several levels
 inside the layout, so that rule hid its own wrapper. It now hides with `visibility` and re-reveals by ID,
 which works at any depth.
 
@@ -128,7 +128,7 @@ Dark is the brand default; light is a deliberate alternative rather than a react
 Both palettes come from one token set: `@theme inline` makes Tailwind emit `var(--c-*)` into utilities
 instead of baking literals, so the whole thing swaps from one attribute on `<html>`. An inline script in
 `<head>` applies the stored choice before first paint. Append `?theme=light` or `?theme=dark` to any URL to
-force one — useful for screenshots and for sharing a link that opens the way you meant it to.
+force one, useful for screenshots and for sharing a link that opens the way you meant it to.
 
 The part drawings carry their own `--art-*` palette so they read as machined metal on white rather than as
 photo negatives of the dark versions.
@@ -136,7 +136,7 @@ photo negatives of the dark versions.
 ## Imagery
 
 There are no photographs. `src/components/art/PartArt.tsx` draws each part as a technical elevation from
-its own spec fields — a 267mm dual-slot passive card is drawn 267mm long, dual-slot and finned, with its
+its own spec fields, a 267mm dual-slot passive card is drawn 267mm long, dual-slot and finned, with its
 actual power connectors. Hotlinking retailer photography would be legally questionable and visually
 incoherent; you get four lighting setups in one grid. This way 2,777 SKUs share one camera, one line
 weight and one palette, and nothing 404s.
@@ -144,7 +144,7 @@ weight and one palette, and nothing 404s.
 ## The hydration warning that is not a bug
 
 If you develop with Bitdefender's browser extension enabled, React will report a hydration mismatch on
-every page. Every diff line in it reads `bis_skin_checked="1"` — an attribute the extension writes into
+every page. Every diff line in it reads `bis_skin_checked="1"`, an attribute the extension writes into
 the DOM before React hydrates. It is not an application bug and no code change fixes it:
 `suppressHydrationWarning` only covers the element it sits on, never the hundreds of descendants the
 extension rewrites.
@@ -161,7 +161,7 @@ are out of the picture. The alternative is excluding `localhost` in the extensio
 ## What is not done
 
 - **No backend.** The quote form composes a `mailto:` draft. There is no CRM, no order pipeline, no
-  payments. That is deliberate for this domain — nobody Stripe-checkouts a PKR 1.5 crore cluster — but a
+  payments. That is deliberate for this domain, nobody Stripe-checkouts a PKR 1.5 crore cluster, but a
   real quote pipeline is the obvious next piece.
 - **`FX_USD_PKR` is a hardcoded constant** in `expand.ts`. Every price derives from it, so the whole
   catalog reprices from one line, but nothing updates it automatically.
