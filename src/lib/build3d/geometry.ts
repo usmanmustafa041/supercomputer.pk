@@ -70,9 +70,13 @@ const BOARD_SIZE: Record<string, { w: number; h: number }> = {
  * cooler clearance, because in a tower the CPU cooler height *is* the width
  * constraint — that is the number the spec sheet actually gives you.
  */
-export function interiorOf(chassis: Chassis | null): Interior {
+export function interiorOf(chassis: Chassis | null, target: "desk" | "rack" | "cluster" = "desk"): Interior {
   if (!chassis) {
-    // A neutral volume so the stage has something to frame before a case is picked.
+    // Before a case is chosen the deployment target decides the shape of the
+    // empty volume. Without this the viewport showed a tower no matter which
+    // target was selected, which made the target buttons look inert.
+    if (target === "rack") return { width: RACK_WIDTH, height: 4 * RACK_U, depth: 700, rack: true, trayZ: 60 };
+    if (target === "cluster") return { width: RACK_WIDTH, height: 8 * RACK_U, depth: 800, rack: true, trayZ: 60 };
     return { width: 220, height: 480, depth: 460, rack: false, trayZ: 40 };
   }
 
@@ -327,7 +331,10 @@ export function fitsInside(box: Box, it: Interior): boolean {
  * Lays out every line in a build. Order matters: the board anchors the CPU,
  * the CPU anchors the cooler, and accelerators walk down the slot rail.
  */
-export function layout(lines: Array<{ product: Product; qty: number }>): {
+export function layout(
+  lines: Array<{ product: Product; qty: number }>,
+  target: "desk" | "rack" | "cluster" = "desk"
+): {
   interior: Interior;
   placements: Placement[];
 } {
@@ -335,7 +342,7 @@ export function layout(lines: Array<{ product: Product; qty: number }>): {
     lines.filter((l) => l.product.kind === k) as Array<{ product: Extract<Product, { kind: K }>; qty: number }>;
 
   const chassis = get("chassis")[0]?.product ?? null;
-  const it = interiorOf(chassis);
+  const it = interiorOf(chassis, target);
   const mb = get("motherboard")[0]?.product ?? null;
   const placements: Placement[] = [];
 
@@ -394,10 +401,13 @@ export function layout(lines: Array<{ product: Product; qty: number }>): {
 }
 
 /** Empty mount points, drawn as ghosts so it is obvious where things go. */
-export function ghosts(lines: Array<{ product: Product; qty: number }>): Array<{ kind: Kind; label: string; box: Box }> {
+export function ghosts(
+  lines: Array<{ product: Product; qty: number }>,
+  target: "desk" | "rack" | "cluster" = "desk"
+): Array<{ kind: Kind; label: string; box: Box }> {
   const present = new Set(lines.map((l) => l.product.kind));
   const chassis = (lines.find((l) => l.product.kind === "chassis")?.product as Chassis | undefined) ?? null;
-  const it = interiorOf(chassis);
+  const it = interiorOf(chassis, target);
   const out: Array<{ kind: Kind; label: string; box: Box }> = [];
 
   if (!present.has("motherboard")) {

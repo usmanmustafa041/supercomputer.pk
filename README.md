@@ -34,7 +34,7 @@ useless. `families-ext.ts` exists to fix that. It is still GPU-heavy, because th
 
 ## The compatibility engine
 
-`src/lib/compat/engine.ts`. Forty-eight rules across processor/board, cooling, memory, accelerators,
+`src/lib/compat/engine.ts`. Fifty rules across processor/board, cooling, memory, accelerators,
 storage, power, fabric and facility. Four severities: `error` blocks a quote, `warn` does not, `info`
 explains a consequence, `gain` points at a free improvement.
 
@@ -75,7 +75,12 @@ generated geometry is always exactly as accurate as the spec sheet and covers al
 `npm run layout:dump "<ids>"` prints the placement table for a build, which is how the orientation and
 mirroring bugs below were found.
 
-Three things that bit me, all visible only once rendered:
+The deployment target (desk / rack / cluster) drives the empty volume when no case is chosen, and once a
+case *is* chosen a pair of rules catch the mismatch — a tower cannot be racked, a rack chassis next to a
+desk is 60 dBA. Without those the target buttons changed the rule set and the slot list but nothing you
+could see, which reads as broken.
+
+Things that bit me, all visible only once rendered:
 
 - Chassis space runs z front-to-back, but three's +z faces the viewer, so the first version rendered the
   case backwards with the PSU in your face.

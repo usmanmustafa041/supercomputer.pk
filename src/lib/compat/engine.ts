@@ -903,6 +903,34 @@ function ruleChassis(b: Build, out: Finding[]) {
     });
   }
 
+  // The deployment target and the chassis have to agree. Without this the
+  // target selector had no observable effect once a case was chosen.
+  if (b.target !== "desk" && chassis.rackU === 0) {
+    push(out, {
+      rule: "chassis.notRackable",
+      severity: "error",
+      title: `${chassis.model} cannot be rack mounted`,
+      detail:
+        chassis.form === "open-frame"
+          ? "An open frame has no rails, no ears and no enclosed airflow path. It cannot go in a rack or a colocation cabinet."
+          : `This is a ${chassis.form.replace("-", " ")}. It has no rack ears or rail mounts, so it cannot be installed in a cabinet.`,
+      refs: [chassis.id],
+      fix: "Choose a rack chassis, or switch the deployment target to desk-side.",
+    });
+  }
+
+  if (b.target === "desk" && chassis.rackU > 0) {
+    push(out, {
+      rule: "chassis.rackOnDesk",
+      severity: "warn",
+      title: `${chassis.model} is a ${chassis.rackU}U rack chassis`,
+      detail:
+        "Rack servers run 40mm fans at high static pressure. Next to a desk they are genuinely loud — 60 dBA and up under load — and they draw air from the front and dump it out the back into whoever is sitting behind.",
+      refs: [chassis.id],
+      fix: "For a desk-side machine, a tower chassis with 140mm fans is far quieter.",
+    });
+  }
+
   if (mb.ipmi === false && chassis.rackU > 0) {
     push(out, {
       rule: "chassis.ipmi",

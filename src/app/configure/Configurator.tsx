@@ -110,6 +110,12 @@ export default function Configurator({
 
   const { summary, findings, errors, warns, buildable } = report;
   const hasLines = lines.length > 0;
+
+  /** Lines whose slot is not offered for the current deployment target. */
+  const orphaned = useMemo(() => {
+    const offered = new Set(slots.map((s) => s.kind));
+    return lines.filter((l) => !offered.has(l.product.kind));
+  }, [lines, slots]);
   const errorIds = useMemo(
     () => [...new Set(findings.filter((f) => f.severity === "error").flatMap((f) => f.refs))],
     [findings]
@@ -180,6 +186,7 @@ export default function Configurator({
             <div className="h-[52vh] xl:h-[62vh] min-h-[24rem]">
               <Stage
                 lines={lines}
+                target={target}
                 dragKind={dragKind}
                 onDropPart={onDropPart}
                 onDragKind={setDragKind}
@@ -310,6 +317,38 @@ export default function Configurator({
                 );
               })}
             </div>
+
+            {/* Switching target removes slots. Anything already chosen for a
+                slot that no longer exists still counts toward price and
+                validation, so it has to stay visible and removable rather than
+                becoming an invisible line on the quote. */}
+            {orphaned.length > 0 && (
+              <section className="border-t border-[var(--line)]">
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <h2 className="text-[12.5px] font-medium">Not used in this deployment</h2>
+                  <span className="pill pill-warn">{orphaned.length}</span>
+                </div>
+                <ul className="divide-y divide-[var(--line)] border-t border-[var(--line)]">
+                  {orphaned.map((l) => (
+                    <li key={l.product.id} className="flex items-center gap-2.5 px-4 py-2">
+                      <span className="min-w-0 flex-1 text-[12px] truncate">
+                        <span className="text-ink-2">{l.qty}x</span> {l.product.brand} {l.product.model}
+                      </span>
+                      <span className="t-data text-[11px] shrink-0">
+                        {l.product.price.onRequest ? "POA" : fmtPkr(l.product.price.pkr * l.qty)}
+                      </span>
+                      <button
+                        onClick={() => setQty(l.product.id, 0)}
+                        className="btn btn-ghost btn-sm shrink-0"
+                        aria-label={`Remove ${l.product.model}`}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <div className="p-4 border-t border-[var(--line)] space-y-2">
               <div className="flex items-baseline justify-between gap-3">

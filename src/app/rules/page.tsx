@@ -30,6 +30,8 @@ const GROUPS: Array<{
       ["cpu.maxSockets", "error", "Part is single-socket only", "The P-series SKUs are fused to refuse multi-socket operation despite being physically identical."],
       ["cpu.halfPopulated", "warn", "Second socket empty", "Half the DIMM slots and several PCIe slots are wired to CPU2 and will not function."],
       ["chassis.form", "error", "Board will not mount", "The chassis has standoffs for other form factors."],
+      ["chassis.notRackable", "error", "Tower or open frame in a rack deployment", "No rails, no ears, no enclosed airflow path. It cannot go in a cabinet."],
+      ["chassis.rackOnDesk", "warn", "Rack chassis chosen for a desk", "40mm fans at high static pressure are 60 dBA and up under load, exhausting into whoever sits behind."],
       ["chassis.ipmi", "warn", "Rack node without out-of-band management", "Every failed boot becomes a site visit."],
     ],
   },

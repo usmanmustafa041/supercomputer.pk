@@ -1,11 +1,12 @@
 "use client";
 
-import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Grid, OrbitControls, Edges, Html, ContactShadows } from "@react-three/drei";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { MM_PER_UNIT, layout, ghosts, type Box, type Interior, type Placement } from "@/lib/build3d/geometry";
-import type { BuildLine } from "@/lib/compat/types";
+import { TARGET_LABEL, type BuildLine, type Target } from "@/lib/compat/types";
 import type { Kind } from "@/lib/catalog/types";
 import { useScenePalette, type ScenePalette } from "./theme";
 
@@ -218,23 +219,58 @@ function Ghost({
   );
 }
 
+/* ----------------------------------------------------------- reframing */
+
+/**
+ * Re-frames the camera whenever the interior volume changes.
+ *
+ * The `camera` prop on <Canvas> is only read when the canvas mounts, so
+ * swapping a tower for a 4U chassis — or switching deployment target — left
+ * the view framed for the previous volume and the controls clamped to its
+ * distances. Nothing appeared to happen, which is what made the target
+ * buttons feel dead.
+ */
+function Reframe({ it }: { it: Interior }) {
+  const camera = useThree((s) => s.camera);
+  const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
+  const w = u(it.width);
+  const h = u(it.height);
+  const d = u(it.depth);
+
+  useEffect(() => {
+    const span = Math.max(w, d, h);
+    const focus = new THREE.Vector3(0, h * 0.45, 0);
+    camera.position.set(span * 0.95, span * 0.72 + h * 0.25, span * 1.15);
+    camera.lookAt(focus);
+    camera.updateProjectionMatrix();
+    // Distance clamps are declared on <OrbitControls> instead of assigned here,
+    // so only the focus point needs touching imperatively.
+    controls?.target.copy(focus);
+    controls?.update();
+  }, [camera, controls, w, h, d]);
+
+  return null;
+}
+
 /* ------------------------------------------------------------ the scene */
 
 function SceneBody({
   lines,
+  target,
   pal,
   dragKind,
   selected,
   onSelect,
 }: {
   lines: BuildLine[];
+  target: Target;
   pal: ScenePalette;
   dragKind: Kind | null;
   selected: string | null;
   onSelect: (id: string | null) => void;
 }) {
-  const { interior, placements } = useMemo(() => layout(lines), [lines]);
-  const ghostList = useMemo(() => ghosts(lines), [lines]);
+  const { interior, placements } = useMemo(() => layout(lines, target), [lines, target]);
+  const ghostList = useMemo(() => ghosts(lines, target), [lines, target]);
   const hasChassis = lines.some((l) => l.product.kind === "chassis");
   const span = Math.max(u(interior.width), u(interior.depth));
 
@@ -274,6 +310,7 @@ function SceneBody({
 
       <ContactShadows position={[0, 0.001, 0]} opacity={pal.dark ? 0.55 : 0.3} scale={span * 3} blur={2.4} far={4} />
 
+      <Reframe it={interior} />
       <Shell it={interior} pal={pal} hasChassis={hasChassis} />
 
       {ghostList.map((g, i) => (
@@ -309,6 +346,7 @@ function SceneBody({
 
 export interface StageProps {
   lines: BuildLine[];
+  target: Target;
   /** Kind currently being dragged over the stage, so ghosts can respond. */
   dragKind: Kind | null;
   onDropPart: (kind: Kind) => void;
@@ -316,10 +354,10 @@ export interface StageProps {
   errorIds: string[];
 }
 
-export default function Stage({ lines, dragKind, onDropPart, onDragKind, errorIds }: StageProps) {
+export default function Stage({ lines, target, dragKind, onDropPart, onDragKind, errorIds }: StageProps) {
   const pal = useScenePalette();
   const [selected, setSelected] = useState<string | null>(null);
-  const { interior } = useMemo(() => layout(lines), [lines]);
+  const { interior } = useMemo(() => layout(lines, target), [lines, target]);
   const span = Math.max(u(interior.width), u(interior.depth), u(interior.height));
 
   return (
@@ -342,7 +380,7 @@ export default function Stage({ lines, dragKind, onDropPart, onDragKind, errorId
       }}
     >
       <Canvas
-        shadows
+        shadows="percentage"
         dpr={[1, 2]}
         // Framed from the open side. The previous distance sat about twice as
         // far back as the field of view needed, so the case read as a speck.
@@ -352,6 +390,7 @@ export default function Stage({ lines, dragKind, onDropPart, onDragKind, errorId
       >
         <SceneBody
           lines={lines}
+          target={target}
           pal={pal}
           dragKind={dragKind}
           selected={selected}
@@ -360,8 +399,11 @@ export default function Stage({ lines, dragKind, onDropPart, onDragKind, errorId
       </Canvas>
 
       {/* overlay chrome */}
-      <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
+      <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 pointer-events-none">
         <span className="pill">{interior.rack ? "rack interior" : "tower interior"}</span>
+        {/* Deployment target is shown here too, so switching it always changes
+            something visible in the viewport even when the case does not. */}
+        <span className="pill pill-cool">{TARGET_LABEL[target].toLowerCase()}</span>
         <span className="t-data text-[10px] text-ink-3">
           {Math.round(interior.width)} × {Math.round(interior.height)} × {Math.round(interior.depth)} mm
         </span>

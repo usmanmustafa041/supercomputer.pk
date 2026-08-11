@@ -19,7 +19,7 @@ export default function Home() {
   // Ticker content: real catalog extremes, not invented marketing numbers.
   const ticker = [
     `${total.toLocaleString()} SKUs`,
-    "48 compatibility rules",
+    "50 compatibility rules",
     "6 condition grades",
     `${verified} verified retailers`,
     "230V / 3-phase aware",
@@ -138,7 +138,7 @@ export default function Home() {
             </h2>
             <p className="mt-5 text-[15px] leading-relaxed text-ink-1 max-w-md">
               Passive cards in a tower. Four GPUs on one 12VHPWR lead. A chassis 80mm too deep for the rack.
-              Forty-eight rules, and each one says what to do instead.
+              Fifty rules, and each one says what to do instead.
             </p>
             <Link href="/rules" className="btn btn-ghost mt-7">
               Read the rules
