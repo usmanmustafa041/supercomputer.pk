@@ -53,6 +53,17 @@ Frames are 1280px wide WebP at quality 74, about 6.7MB for all 103. Higher
 than that is not worth it: the footage is grainy dark metal, which WebP does
 not compress well, and 1600px cost another 60% for no visible gain.
 
+## The rest of the page
+
+The site header, category grid, pillars, call to action and footer are all in
+here too, so the hero can be judged as part of a home page rather than on its
+own. They are static markup copied to match the real components, not wired to
+anything.
+
+The header fades out over the hero so the machine is not boxed in, then goes
+solid once the sticky section is behind you, because text scrolling under a
+see-through bar looks scruffy.
+
 ## Known gaps
 
 - Not integrated with the site, and deliberately so.
@@ -62,3 +73,9 @@ not compress well, and 1600px cost another 60% for no visible gain.
   re-rendered they will need moving.
 - Copy is a first pass, written to show how the type behaves rather than to be
   final.
+- The white rim glow is baked into the footage. It can be removed, but not
+  cheaply: a brightness curve cannot do it, because the halo peaks brighter
+  than the case panel behind it and much of the machine sits in the same range.
+  Edge detection plus a flood fill from the border gets most of the way there,
+  and then leaks through the top edge of the case, which has no strong gradient
+  to stop it. Left alone for now.
