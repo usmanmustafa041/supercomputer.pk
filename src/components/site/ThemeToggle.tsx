@@ -13,10 +13,11 @@ const THEME_EVENT = "tf-theme-change";
  */
 export const THEME_SCRIPT = `(function(){try{
 var q=new URLSearchParams(location.search).get('theme');
-var t=(q==='light'||q==='dark')?q:localStorage.getItem('${THEME_KEY}');
+var s=localStorage.getItem('${THEME_KEY}');
+var t=(q==='light'||q==='dark')?q:((s==='light'||s==='dark')?s:'light');
 if(q==='light'||q==='dark'){localStorage.setItem('${THEME_KEY}',q)}
-if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t)}
-}catch(e){}})()`;
+document.documentElement.setAttribute('data-theme',t);
+}catch(e){document.documentElement.setAttribute('data-theme','light')}})()`;
 
 /**
  * The <html> attribute is the source of truth — it is set by the inline script
@@ -30,12 +31,12 @@ function subscribe(onChange: () => void) {
 }
 
 function getSnapshot(): Theme {
-  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
 }
 
-/** Dark is the brand default, so that is what the server renders. */
+/** Light is the default, so that is what the server renders. */
 function getServerSnapshot(): Theme {
-  return "dark";
+  return "light";
 }
 
 function Sun() {

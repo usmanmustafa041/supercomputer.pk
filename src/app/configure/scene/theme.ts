@@ -72,10 +72,10 @@ function subscribe(cb: () => void) {
 }
 
 function getSnapshot(): boolean {
-  return document.documentElement.getAttribute("data-theme") !== "light";
+  return document.documentElement.getAttribute("data-theme") === "dark";
 }
 
 export function useScenePalette(): ScenePalette {
-  const isDark = useSyncExternalStore(subscribe, getSnapshot, () => true);
+  const isDark = useSyncExternalStore(subscribe, getSnapshot, () => false);
   return isDark ? DARK : LIGHT;
 }

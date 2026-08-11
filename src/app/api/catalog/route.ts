@@ -47,13 +47,23 @@ export async function GET(req: Request) {
 
   const families = sp.get("families");
   if (families) {
-    // Pick one representative SKU per family: the cheapest that we can
-    // actually supply, preferring stock we hold over an indent line.
-    const wanted = new Set(families.split(","));
+    /**
+     * Resolve one SKU per family. `key:hint` pins a variant by substring of
+     * the model name — without it a power-supply family resolves to its
+     * cheapest, lowest-wattage member and every preset ships undersized.
+     */
+    const wanted = new Map<string, string | null>();
+    for (const token of families.split(",")) {
+      const [key, hint] = token.split(":");
+      wanted.set(key, hint ?? null);
+    }
+
     const byFamily = new Map<string, Product>();
     for (const kind of ["chassis", "motherboard", "cpu", "cooler", "memory", "gpu", "storage", "psu", "nic", "switch", "optic", "rack", "pdu", "ups"] as Kind[]) {
       for (const p of getByKind(kind)) {
         if (!wanted.has(p.family)) continue;
+        const hint = wanted.get(p.family);
+        if (hint && !p.model.toLowerCase().includes(hint.toLowerCase())) continue;
         const cur = byFamily.get(p.family);
         if (!cur) { byFamily.set(p.family, p); continue; }
         const better =
@@ -66,6 +76,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ items, total: items.length, page: 1, pages: 1 });
   }
 
+  // Rack targets only ever want rack-mountable enclosures, and vice versa.
+  const forTarget = sp.get("for");
+  const rackOnly = forTarget === "rack" || forTarget === "cluster";
+
   const res = search({
     kind: sp.get("kind") ? [sp.get("kind") as Kind] : undefined,
     text: sp.get("q") ?? undefined,
@@ -75,8 +89,13 @@ export async function GET(req: Request) {
     inStockOnly: sp.get("stock") === "1",
   });
 
+  const items =
+    forTarget && sp.get("kind") === "chassis"
+      ? res.items.filter((p) => p.kind === "chassis" && (p.rackU > 0) === rackOnly)
+      : res.items;
+
   return NextResponse.json({
-    items: res.items,
+    items,
     total: res.total,
     page: res.page,
     pages: res.pages,

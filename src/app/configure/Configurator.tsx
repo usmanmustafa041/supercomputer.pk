@@ -61,6 +61,17 @@ export default function Configurator({
   /** Kind whose per-node ceiling was just hit, so the refusal is explained. */
   const [capHit, setCapHit] = useState<Kind | null>(null);
 
+  /**
+   * Which pane is showing on a phone.
+   *
+   * Stacking the viewport, the parts list and the validation vertically meant
+   * scrolling the length of the page between every single decision. On mobile
+   * these become three panes of one screen, switched from a bottom bar, with a
+   * status strip that stays visible so you never have to leave a pane to find
+   * out whether the build still works. Desktop keeps all three side by side.
+   */
+  const [pane, setPane] = useState<"build" | "view" | "checks">("build");
+
   // Clear the ceiling notice a few seconds after it appears.
   useEffect(() => {
     if (!capHit) return;
@@ -146,7 +157,7 @@ export default function Configurator({
     if (!preset) return;
     setTarget(preset.target);
     setLoadingPreset(true);
-    fetch(`/api/catalog?families=${preset.picks.map(([f]) => f).join(",")}`)
+    fetch(`/api/catalog?families=${preset.picks.map((p) => (p[2] ? `${p[0]}:${encodeURIComponent(p[2])}` : p[0])).join(",")}`)
       .then((r) => r.json())
       .then((d: { items: Product[] }) => {
         const byFamily = new Map(d.items.map((p) => [p.family, p]));
@@ -235,12 +246,12 @@ export default function Configurator({
   }, [lines, errorIds]);
 
   return (
-    <div className="shell py-6 md:py-9">
-      <header className="mb-5">
-        <p className="t-eyebrow mb-2">Configurator</p>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="t-display text-[clamp(1.7rem,4vw,2.7rem)]">Build it. We will check it.</h1>
-          <div className="flex items-center gap-2">
+    <div className="shell py-4 md:py-9 pb-28 lg:pb-9 overflow-x-clip">
+      <header className="mb-3 lg:mb-5">
+        <p className="t-eyebrow mb-2 hidden lg:block">Configurator</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h1 className="t-display text-[clamp(1.5rem,4vw,2.7rem)] hidden lg:block">Build it. We will check it.</h1>
+          <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto no-bar">
             {(Object.keys(TARGET_LABEL) as Target[]).map((t) => (
               <button
                 key={t}
@@ -326,9 +337,9 @@ export default function Configurator({
 
       <div className="grid xl:grid-cols-[1fr_26rem] gap-5 items-start">
         {/* ----------------------------------------------------------- stage */}
-        <div className="xl:sticky xl:top-24 space-y-4">
+        <div className={`${pane === "view" ? "block" : "hidden"} lg:block xl:sticky xl:top-24 space-y-4`}>
           <div className="panel-raised ticked overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)]">
+            <div className="hidden lg:flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)]">
               <span className="t-label">3D viewport</span>
               <div className="flex items-center gap-2">
                 {hasLines && (
@@ -341,7 +352,7 @@ export default function Configurator({
                 </span>
               </div>
             </div>
-            <div className="h-[52vh] xl:h-[62vh] min-h-[24rem]">
+            <div className="h-[calc(100dvh-15rem)] lg:h-[52vh] xl:h-[62vh] min-h-[18rem]">
               <Stage
                 lines={lines}
                 target={target}
@@ -375,9 +386,9 @@ export default function Configurator({
         </div>
 
         {/* ------------------------------------------------------- side rail */}
-        <aside className="space-y-4">
+        <aside className="space-y-4 min-w-0">
           {/* parts */}
-          <div className="panel">
+          <div className={`${pane === "build" ? "block" : "hidden"} lg:block panel`}>
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)]">
               <span className="t-label">Parts</span>
               <span className="t-data text-[10px] text-ink-3">drag into the case</span>
@@ -398,7 +409,7 @@ export default function Configurator({
                         setDragKind(slot.kind);
                       }}
                       onDragEnd={() => setDragKind(null)}
-                      className={`flex items-center justify-between gap-3 px-4 py-2 cursor-grab active:cursor-grabbing transition-colors ${
+                      className={`flex items-center justify-between gap-2 px-3 lg:px-4 py-2 cursor-grab active:cursor-grabbing transition-colors ${
                         dragKind === slot.kind ? "bg-acc/10" : "hover:bg-[var(--wash-2)]"
                       }`}
                       title={`Drag ${slot.label.toLowerCase()} into the viewport`}
@@ -526,7 +537,7 @@ export default function Configurator({
           </div>
 
           {/* validation */}
-          <div className="panel">
+          <div className={`${pane === "checks" ? "block" : "hidden"} lg:block panel`}>
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--line)]">
               <span className="t-label">Validation</span>
               <span className="t-data text-[10.5px] text-ink-3">
@@ -584,10 +595,74 @@ export default function Configurator({
         </aside>
       </div>
 
+      {/* ------------------------------------------------ mobile app shell bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--color-surface)] border-t border-[var(--line)]">
+        {/* Status stays visible in every pane, so checking whether the build
+            still works never costs a pane switch. */}
+        <div className="flex items-center justify-between gap-3 px-4 py-1.5 border-b border-[var(--line)]">
+          <span className="t-data text-[10.5px] text-ink-2">
+            {summary.power.peakW > 0 ? `${summary.power.peakW.toLocaleString()} W · ${summary.power.amps230} A` : "no parts yet"}
+          </span>
+          <span className="flex items-center gap-1.5">
+            {summary.rackU > 0 && <span className="t-data text-[10.5px] text-ink-3">{summary.rackU}U</span>}
+            {hasLines && (
+              <span className={`pill ${buildable ? "pill-ok" : "pill-err"}`}>
+                {buildable ? "valid" : `${errors} blocking`}
+              </span>
+            )}
+          </span>
+        </div>
+
+        <nav className="grid grid-cols-4" aria-label="Configurator sections">
+          {([
+            ["build", "Parts", lines.length],
+            ["view", "3D", 0],
+            ["checks", "Checks", findings.length],
+          ] as Array<[typeof pane, string, number]>).map(([id, label, count]) => (
+            <button
+              key={id}
+              onClick={() => setPane(id)}
+              aria-current={pane === id ? "page" : undefined}
+              className={`flex flex-col items-center gap-0.5 py-2 t-data text-[10px] uppercase tracking-[0.08em] transition-colors ${
+                pane === id ? "text-acc" : "text-ink-2"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                {label}
+                {count > 0 && (
+                  <span
+                    className={`px-1 leading-[1.5] rounded-sm text-[9px] ${
+                      id === "checks" && errors > 0
+                        ? "bg-err text-[var(--color-acc-ink)]"
+                        : "bg-[var(--wash)] text-ink-2"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </span>
+              <span
+                className={`h-0.5 w-8 transition-colors ${pane === id ? "bg-acc" : "bg-transparent"}`}
+                aria-hidden
+              />
+            </button>
+          ))}
+
+          <Link
+            href={`/quote${encodeBuild(lines, target)}`}
+            className="flex flex-col items-center gap-0.5 py-2 t-data text-[10px] uppercase tracking-[0.08em] text-ink-2"
+          >
+            <span>Quote</span>
+            <span className="h-0.5 w-8 bg-transparent" aria-hidden />
+          </Link>
+        </nav>
+      </div>
+
       {picking && (
         <PartPicker
           kind={picking.kind}
           hint={picking.hint}
+          forTarget={target}
           onClose={() => setPicking(null)}
           onPick={(p) => {
             add(p, picking.defaultQty);

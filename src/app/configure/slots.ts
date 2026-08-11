@@ -50,14 +50,23 @@ export function slotsFor(target: Target): Slot[] {
   return SLOTS.filter((s) => s.targets.includes(target));
 }
 
-/** Prefilled starting points, referenced by family key so they survive re-expansion. */
+/**
+ * Prefilled starting points, referenced by family key so they survive
+ * re-expansion of the catalog.
+ *
+ * The third element pins a variant. Without it, resolution takes the cheapest
+ * SKU in the family, which for a power supply means the lowest wattage and for
+ * a memory line means a single module — so every preset shipped undersized and
+ * with its channels unpopulated. `npm run preset:test` asserts they are all
+ * buildable.
+ */
 export interface Preset {
   id: string;
   name: string;
   target: Target;
   blurb: string;
-  /** [family key, quantity] pairs resolved against the catalog at load. */
-  picks: Array<[string, number]>;
+  /** [family key, quantity, variant substring matched against the model name] */
+  picks: Array<[string, number] | [string, number, string]>;
 }
 
 export const PRESETS: Preset[] = [
@@ -65,11 +74,18 @@ export const PRESETS: Preset[] = [
     id: "ws-dual-ada",
     name: "Dual-GPU AI workstation",
     target: "desk",
-    blurb: "Threadripper PRO, 256GB ECC, two blower-style 48GB cards. Fits under a desk on one 230V circuit.",
+    blurb: "Threadripper PRO, 128GB ECC, two 48GB ECC cards. Fits under a desk on one 230V circuit.",
     picks: [
-      ["fractal-define7-xl", 1], ["wrx90e-sage", 1], ["tr-7965wx", 1], ["nh-u9-tr5", 1],
-      ["vcolor-ddr5-rdimm-ws", 1], ["rtx-6000-ada", 2], ["samsung-990pro", 2],
-      ["corsair-ax", 1],
+      ["fractal-define7-xl", 1],
+      // TRX50 rather than WRX90: WRX90 wants three EPS headers and no ATX
+      // supply made provides more than two.
+      ["trx50-aero", 1],
+      ["tr-7965wx", 1],
+      ["tr-aio-360", 1],
+      ["vcolor-ddr5-rdimm-ws", 1, "4x32GB"],
+      ["rtx-6000-ada", 2],
+      ["samsung-990pro", 2, "2TB"],
+      ["corsair-ax", 1, "1600W"],
     ],
   },
   {
@@ -78,9 +94,18 @@ export const PRESETS: Preset[] = [
     target: "rack",
     blurb: "EPYC host, passive datacenter cards, redundant CRPS power, U.2 NVMe throughout.",
     picks: [
-      ["smc-cse-418", 1], ["h13ssl-n", 1], ["epyc-9354p", 1], ["smc-snk-p0064ap4", 1],
-      ["sk-ddr5-rdimm-5600", 1], ["l40s", 4], ["kioxia-cd8", 4],
-      ["smc-crps-2u-hi", 2], ["cx6-hdr", 1],
+      ["smc-cse-418", 1],
+      // E-ATX: the 4U GPU chassis has no ATX standoffs.
+      ["mz33-ar0", 1],
+      ["epyc-9354p", 1],
+      ["smc-snk-p0064ap4", 1],
+      // Twelve modules so every Genoa channel is populated.
+      ["sk-ddr5-rdimm-5600", 1, "12x32GB"],
+      ["l40s", 4],
+      // U.2 to match the chassis backplane; U.3 drives will not enumerate in it.
+      ["samsung-pm9a3", 4, "3.84TB"],
+      ["smc-crps-2u-hi", 2, "5250W"],
+      ["cx6-hdr", 1],
     ],
   },
   {
@@ -89,8 +114,14 @@ export const PRESETS: Preset[] = [
     target: "rack",
     blurb: "Refurbished Milan platform. The cheapest honest route to 128 PCIe lanes and ECC memory.",
     picks: [
-      ["smc-cse-745", 1], ["h12ssl-i", 1], ["epyc-7313", 1], ["sp3-4u-tower", 1],
-      ["micron-ddr4-rdimm-3200", 1], ["samsung-pm9a3", 2], ["smc-crps", 2],
+      ["smc-cse-745", 1],
+      ["h12ssl-i", 1],
+      ["epyc-7313", 1],
+      ["dynatron-a24", 1],
+      ["micron-ddr4-rdimm-3200", 1, "8x32GB"],
+      // SATA to match the SAS3 backplane, which accepts SATA but not U.2.
+      ["samsung-pm893", 2, "1.92TB"],
+      ["smc-crps", 2, "1600W"],
       ["cx5-edr", 1],
     ],
   },
@@ -100,8 +131,16 @@ export const PRESETS: Preset[] = [
     target: "desk",
     blurb: "Four 24GB consumer cards on risers with real spacing. No ECC, no NVLink, considerably cheaper.",
     picks: [
-      ["mining-frame-8", 1], ["wrx80e-sage", 1], ["tr-5995wx", 1], ["nh-u9-tr5", 1],
-      ["micron-ddr4-rdimm-3200", 1], ["rtx-3090", 4], ["sn850x", 2], ["corsair-ax", 2],
+      // The 12-slot frame: four triple-slot cards consume twelve positions.
+      ["mining-frame-12", 1],
+      ["wrx80e-sage", 1],
+      ["tr-5995wx", 1],
+      // Air, not liquid — an open frame has nowhere to mount a radiator.
+      ["nh-u14s-tr4", 1],
+      ["micron-ddr4-rdimm-3200", 1, "8x32GB"],
+      ["rtx-3090", 4],
+      ["sn850x", 2, "2TB"],
+      ["corsair-ax", 2, "1600W"],
     ],
   },
 ];

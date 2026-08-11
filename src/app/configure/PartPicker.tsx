@@ -8,11 +8,13 @@ import { CONDITION_LABEL, KIND_LABEL, type Kind, type Product } from "@/lib/cata
 interface Props {
   kind: Kind;
   hint: string;
+  /** Deployment target, so chassis options can be filtered to what fits it. */
+  forTarget: string;
   onPick: (p: Product) => void;
   onClose: () => void;
 }
 
-export default function PartPicker({ kind, hint, onPick, onClose }: Props) {
+export default function PartPicker({ kind, hint, forTarget, onPick, onClose }: Props) {
   const [q, setQ] = useState("");
   // Quote-only storefront: capability is the only sort, price never appears.
   const sort = "perf" as const;
@@ -31,7 +33,7 @@ export default function PartPicker({ kind, hint, onPick, onClose }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    const params = new URLSearchParams({ kind, page: String(page), sort });
+    const params = new URLSearchParams({ kind, page: String(page), sort, for: forTarget });
     if (q.trim()) params.set("q", q.trim());
     if (stockOnly) params.set("stock", "1");
 
@@ -58,7 +60,7 @@ export default function PartPicker({ kind, hint, onPick, onClose }: Props) {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [kind, q, page, sort, stockOnly]);
+  }, [kind, q, page, sort, stockOnly, forTarget]);
 
   useEffect(() => {
     inputRef.current?.focus();
