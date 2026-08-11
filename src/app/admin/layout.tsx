@@ -10,13 +10,12 @@ export const metadata: Metadata = {
 };
 
 /**
- * The real gate.
+ * The gate.
  *
- * proxy.ts turns away anyone with no cookie at all, which keeps obvious traffic
- * off these routes cheaply, but a cookie is only a claim. This is where the
- * claim gets checked against the API, and every page below inherits the check.
- * The API enforces it a third time on each call, which is the one that actually
- * protects the data.
+ * proxy.ts turns away anyone with no cookie at all, cheaply, before a render
+ * starts. This looks the session up properly, so a disabled or demoted account
+ * loses access on the next page view rather than whenever a token expires.
+ * Every action that changes data checks again on its own.
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -25,23 +24,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-base">
-      <header className="border-b border-[var(--line)] bg-void/60 backdrop-blur-xl sticky top-0 z-40">
-        <div className="shell flex items-center gap-4 h-14">
-          <span className="t-display text-[15px] tracking-[-0.02em] shrink-0">Admin</span>
-          <AdminNav />
-          <div className="ml-auto flex items-center gap-3 shrink-0">
-            <span className="hidden sm:block text-[12px] text-ink-2 truncate max-w-[16rem]">
-              {session.email}
-            </span>
-            <form action={signOut}>
-              <button type="submit" className="btn btn-sm">
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-      {children}
+      <AdminNav email={session.email} signOut={signOut} />
+      {/* Bottom padding clears the phone tab bar. */}
+      <div className="pb-20 md:pb-0">{children}</div>
     </div>
   );
 }

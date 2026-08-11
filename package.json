@@ -13,14 +13,13 @@
     "layout:dump": "tsx scripts/layout-dump.ts",
     "dev:browser": "scripts\\dev-browser.cmd",
     "check": "npm run typecheck && npm run lint && npm run compat:test && npm run preset:test",
-    "preset:test": "tsx scripts/preset-check.ts",
-    "catalog:export": "tsx scripts/catalog-export.ts",
-    "api:types": "openapi-typescript http://localhost:8000/openapi.json -o src/lib/api/schema.d.ts"
+    "preset:test": "tsx scripts/preset-check.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "next": "16.3.0",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",
@@ -29,12 +28,12 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.21.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.185.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
-    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"

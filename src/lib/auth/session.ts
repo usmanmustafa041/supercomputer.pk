@@ -1,45 +1,86 @@
 /**
- * Who is signed in, from the server's point of view.
+ * Who is signed in.
  *
- * `getSession()` asks the API rather than trusting anything in the cookie
- * beyond the token itself. The token is signed, so it could be decoded here
- * without a round trip, but then a disabled account or a demoted admin would
- * keep its old powers until the token expired. Asking is cheap and correct.
+ * The cookie holds a long random string and nothing else. It means nothing on
+ * its own; the row it points at in the sessions table is what carries the
+ * account. Two things follow from that: signing out really ends the session
+ * rather than waiting for a token to expire, and nobody can read their own role
+ * out of the cookie, let alone change it.
  */
 
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { cache } from "react";
-import { api, SESSION_COOKIE } from "@/lib/api/server";
-import { toSession, type Session, type User } from "@/lib/api/types";
+import { one, query } from "@/lib/db/client";
+import { ensureReady } from "@/lib/db/init";
+import type { Session, UserRow } from "@/lib/db/types";
 
-/** `cache` dedupes this within a single render pass. */
-export const getSession = cache(async (): Promise<Session | null> => {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-  try {
-    return toSession(await api<User>("/api/auth/me", { token }));
-  } catch {
-    // Expired, tampered with, or the account is gone. Same answer either way.
-    return null;
-  }
-});
-
-export async function requireAdmin(): Promise<Session> {
-  const s = await getSession();
-  if (!s || s.role !== "admin") {
-    // The layout redirects before this ever throws; this is the backstop for
-    // anything that reaches a data call without passing the layout.
-    throw new Error("Administrator access required.");
-  }
-  return s;
-}
+export const SESSION_COOKIE = "sc_session";
+const SESSION_DAYS = 14;
 
 export const COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: "lax",
   secure: process.env.NODE_ENV === "production",
   path: "/",
-  // Matches the token lifetime the API issues.
-  maxAge: 60 * 60 * 12,
+  maxAge: 60 * 60 * 24 * SESSION_DAYS,
 } as const;
+
+export async function createSession(userId: number): Promise<string> {
+  const token = randomBytes(32).toString("base64url");
+  await query(
+    `INSERT INTO sessions (token, user_id, expires_at)
+     VALUES ($1, $2, now() + ($3 || ' days')::interval)`,
+    [token, userId, String(SESSION_DAYS)],
+  );
+
+  // Opportunistic tidy-up. Cheap, indexed, and saves needing a cron job for
+  // the one housekeeping task this app has.
+  await query("DELETE FROM sessions WHERE expires_at < now()");
+  return token;
+}
+
+export async function destroySession(token: string): Promise<void> {
+  await query("DELETE FROM sessions WHERE token = $1", [token]);
+}
+
+/** `cache` means several components asking in one render only hit the database once. */
+export const getSession = cache(async (): Promise<Session | null> => {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+
+  await ensureReady();
+
+  const row = await one<UserRow>(
+    `SELECT u.id, u.email, u.full_name, u.organisation, u.role
+       FROM sessions s
+       JOIN users u ON u.id = s.user_id
+      WHERE s.token = $1
+        AND s.expires_at > now()
+        AND u.is_active`,
+    [token],
+  );
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    fullName: row.full_name,
+    organisation: row.organisation,
+  };
+});
+
+/**
+ * The backstop on every write.
+ *
+ * The admin layout already redirects anyone who should not be here, but that
+ * governs what gets drawn. This governs what gets done, and every action that
+ * changes data calls it before touching anything.
+ */
+export async function requireAdmin(): Promise<Session> {
+  const s = await getSession();
+  if (!s || s.role !== "admin") throw new Error("Administrator access required.");
+  return s;
+}

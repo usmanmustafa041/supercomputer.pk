@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { api } from "@/lib/api/server";
+import { quotesForUser } from "@/lib/db/quotes";
 import { getSession } from "@/lib/auth/session";
 import { signOut } from "@/lib/auth/actions";
-import { QUOTE_STATUS_LABEL, type Quote } from "@/lib/api/types";
+import { QUOTE_STATUS_LABEL, type QuoteRow } from "@/lib/db/types";
 
 export const metadata: Metadata = { title: "Your account" };
 
-function when(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
+function when(at: Date) {
+  return new Date(at).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -20,10 +20,10 @@ export default async function AccountPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=/account");
 
-  let quotes: Quote[] = [];
+  let quotes: QuoteRow[] = [];
   let offline = false;
   try {
-    quotes = await api<Quote[]>("/api/quotes/mine", { auth: true });
+    quotes = await quotesForUser(session.id, session.email);
   } catch {
     offline = true;
   }

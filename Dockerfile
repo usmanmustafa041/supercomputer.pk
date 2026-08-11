@@ -1,5 +1,5 @@
-# Next.js website, built in stages so the shipped image carries only what it
-# needs to run — no source, no dev dependencies.
+# The website, built in stages so the shipped image carries only what it needs
+# to run: no source, no development dependencies.
 
 # ----------------------------------------------------------------- deps
 FROM node:24-alpine AS deps
@@ -12,13 +12,7 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# NEXT_PUBLIC_* is inlined into the client bundle at build time, so it has to
-# be present here rather than only at runtime.
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
-
 RUN npm run build
 
 # ---------------------------------------------------------------- runner
@@ -30,11 +24,15 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
 
-# `output: "standalone"` emits a self-contained server with only the modules
-# actually imported, which is a fraction of node_modules.
+# `output: "standalone"` emits a self-contained server carrying only the
+# modules actually imported, which is a fraction of node_modules.
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Read at runtime to create the tables, so it has to be in the image. The
+# bundler only traces imported code and would not have noticed it.
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db/schema.sql ./src/lib/db/schema.sql
 
 USER nextjs
 EXPOSE 3000

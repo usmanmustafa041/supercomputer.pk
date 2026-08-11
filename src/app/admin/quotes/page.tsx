@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { api } from "@/lib/api/server";
-import { QUOTE_STATUS_LABEL, type QuotePage, type QuoteStatus } from "@/lib/api/types";
+import { listQuotes } from "@/lib/db/quotes";
+import { QUOTE_STATUS_LABEL, type QuoteStatus } from "@/lib/db/types";
 
 export const metadata = { title: "Requests" };
 
@@ -13,32 +13,24 @@ export default async function QuotesPage({
 }) {
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
-
-  const params = new URLSearchParams({ page: String(page), per_page: "25" });
-  if (sp.status) params.set("status", sp.status);
-
-  let data: QuotePage;
-  try {
-    data = await api<QuotePage>(`/api/admin/quotes?${params}`, { auth: true });
-  } catch {
-    return (
-      <div className="shell py-10">
-        <p className="panel p-6 text-[14px]">The API is not answering. Check that it is running.</p>
-      </div>
-    );
-  }
+  const data = await listQuotes({ status: sp.status, page, perPage: 25 });
 
   return (
-    <div className="shell py-8">
-      <h1 className="t-display text-2xl mb-1">Quote requests</h1>
-      <p className="text-[13px] text-ink-2 mb-5">{data.total} in total</p>
+    <div className="shell py-6 sm:py-8">
+      <h1 className="t-display text-xl sm:text-2xl mb-1">Quote requests</h1>
+      <p className="text-[13px] text-ink-2 mb-4">{data.total} in total</p>
 
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        <Link href="/admin/quotes" className={`pill ${!sp.status ? "pill-cool" : ""}`}>
+      {/* Scrolls sideways on a phone rather than wrapping into three rows. */}
+      <div className="flex gap-1.5 mb-4 -mx-1 px-1 overflow-x-auto no-bar">
+        <Link href="/admin/quotes" className={`pill shrink-0 ${!sp.status ? "pill-cool" : ""}`}>
           All
         </Link>
         {STATUSES.map(([k, label]) => (
-          <Link key={k} href={`/admin/quotes?status=${k}`} className={`pill ${sp.status === k ? "pill-cool" : ""}`}>
+          <Link
+            key={k}
+            href={`/admin/quotes?status=${k}`}
+            className={`pill shrink-0 ${sp.status === k ? "pill-cool" : ""}`}
+          >
             {label}
           </Link>
         ))}
@@ -52,7 +44,7 @@ export default async function QuotesPage({
             <li key={q.id}>
               <Link
                 href={`/admin/quotes/${q.reference}`}
-                className="panel p-4 grid sm:grid-cols-[10rem_1fr_auto] gap-x-4 gap-y-1 items-center hover:border-[var(--line-mid)] transition-colors"
+                className="panel p-4 grid sm:grid-cols-[10rem_1fr_auto] gap-x-4 gap-y-1 sm:items-center hover:border-[var(--line-mid)] transition-colors"
               >
                 <span className="t-data text-[12px]">{q.reference}</span>
                 <span className="min-w-0">
@@ -69,7 +61,11 @@ export default async function QuotesPage({
                     })}
                   </span>
                 </span>
-                <span className={`pill justify-self-start sm:justify-self-end ${q.status === "new" ? "pill-cool" : ""}`}>
+                <span
+                  className={`pill justify-self-start sm:justify-self-end ${
+                    q.status === "new" ? "pill-cool" : ""
+                  }`}
+                >
                   {QUOTE_STATUS_LABEL[q.status]}
                 </span>
               </Link>

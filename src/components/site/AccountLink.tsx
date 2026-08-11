@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { Session } from "@/lib/api/types";
+import type { Session } from "@/lib/db/types";
 
 /** null means signed out; undefined means we have not looked yet. */
 export default function AccountLink({ className = "" }: { className?: string }) {
