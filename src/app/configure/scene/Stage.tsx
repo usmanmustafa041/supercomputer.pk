@@ -15,6 +15,15 @@ import { useScenePalette, type ScenePalette } from "./theme";
 const u = (mm: number) => mm / MM_PER_UNIT;
 
 /**
+ * What the viewport is framing.
+ *
+ * A 42U cabinet is ten times the height of a 4U node, so showing both at once
+ * makes whichever you care about unreadable. The subject is chosen explicitly
+ * rather than inferred from the deployment target.
+ */
+export type View = "node" | "rack";
+
+/**
  * Chassis space is origin-at-corner with z running front to back. Three's +z
  * points at the viewer, so z is flipped here — otherwise the case renders
  * back-to-front and the power supply ends up in your face.
@@ -386,6 +395,7 @@ function SceneBody({
   selected,
   onSelect,
   chassisConflict,
+  view,
 }: {
   lines: BuildLine[];
   target: Target;
@@ -394,6 +404,7 @@ function SceneBody({
   selected: string | null;
   onSelect: (id: string | null) => void;
   chassisConflict: boolean;
+  view: View;
 }) {
   const { interior, placements } = useMemo(() => layout(lines, target), [lines, target]);
   const ghostList = useMemo(() => ghosts(lines, target), [lines, target]);
@@ -405,7 +416,8 @@ function SceneBody({
       ? { heightU: rackLine.product.heightU, depthMm: rackLine.product.depthMm, widthMm: rackLine.product.widthMm }
       : null;
   // Draw the cabinet for a cluster, or whenever a rack is actually selected.
-  const cluster = interior.rack && (target === "cluster" || rack !== null);
+  // The cabinet is context, not the subject, so it only appears in rack view.
+  const cluster = interior.rack && view === "rack";
   const span = Math.max(u(interior.width), u(interior.depth));
 
   return (
@@ -444,7 +456,11 @@ function SceneBody({
 
       <ContactShadows position={[0, 0.001, 0]} opacity={pal.dark ? 0.55 : 0.3} scale={span * 3} blur={2.4} far={4} />
 
-      <Reframe it={interior} framedHeight={cluster ? (rack?.heightU ?? 42) * 44.45 : interior.height} framedDepth={cluster && rack ? rack.depthMm : interior.depth} />
+      <Reframe
+        it={interior}
+        framedHeight={cluster ? (rack?.heightU ?? 42) * 44.45 : interior.height}
+        framedDepth={cluster && rack ? rack.depthMm : interior.depth}
+      />
       <Shell it={interior} pal={pal} hasChassis={hasChassis} conflict={chassisConflict} />
       {cluster && (
         <ClusterRack
@@ -471,6 +487,10 @@ function SceneBody({
         />
       ))}
 
+      {/* No `target` prop on purpose. drei re-applies it on every render, which
+          overwrote the focus Reframe had just set and dragged the look-at back
+          down to the node — the cabinet then ran off the top of the screen.
+          Reframe owns the target; the controls only own the distance clamps. */}
       <OrbitControls
         makeDefault
         enableDamping
@@ -478,7 +498,6 @@ function SceneBody({
         minDistance={span * 0.18}
         maxDistance={span * 6}
         maxPolarAngle={Math.PI / 2 - 0.03}
-        target={[0, u(interior.height) * 0.45, 0]}
       />
     </>
   );
@@ -503,12 +522,24 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
   const { interior } = useMemo(() => layout(lines, target), [lines, target]);
   const rackLine = lines.find((l) => l.product.kind === "rack");
   const rackU = rackLine && rackLine.product.kind === "rack" ? rackLine.product.heightU : 42;
-  const cabinet = interior.rack && (target === "cluster" || rackLine !== undefined);
-  // Clamp against whatever is actually framed, so the cabinet can be seen whole.
+
+  /**
+   * A cluster is about the cabinet; a single node is about the node. The
+   * default follows that, and switching deployment target resets it, but the
+   * toggle always wins afterwards.
+   */
+  const [override, setOverride] = useState<Partial<Record<Target, View>>>({});
+  const view: View = override[target] ?? (target === "cluster" ? "rack" : "node");
+  const setView = (v: View) => setOverride((o) => ({ ...o, [target]: v }));
+
+  const rackAvailable = interior.rack;
+  const showingRack = rackAvailable && view === "rack";
+
+  // Clamp against whatever is actually framed, so the subject can be seen whole.
   const span = Math.max(
     u(interior.width),
     u(interior.depth),
-    u(cabinet ? rackU * 44.45 : interior.height)
+    u(showingRack ? rackU * 44.45 : interior.height)
   );
 
   return (
@@ -549,12 +580,13 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
           selected={selected}
           onSelect={setSelected}
           chassisConflict={chassisConflict}
+          view={showingRack ? "rack" : "node"}
         />
       </Canvas>
 
       {/* overlay chrome */}
       <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 pointer-events-none">
-        <span className="pill">{interior.rack ? "rack interior" : "tower interior"}</span>
+        <span className="pill">{showingRack ? `${rackU}U cabinet` : interior.rack ? "rack node" : "tower interior"}</span>
         {/* Deployment target is shown here too, so switching it always changes
             something visible in the viewport even when the case does not. */}
         <span className="pill pill-cool">{TARGET_LABEL[target].toLowerCase()}</span>
@@ -564,11 +596,31 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
         </span>
       </div>
 
-      {errorIds.length > 0 && (
-        <div className="absolute top-3 right-3 pointer-events-none">
-          <span className="pill pill-err">{errorIds.length} part{errorIds.length > 1 ? "s" : ""} conflict</span>
-        </div>
-      )}
+      <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
+        {/* Only offered when there is a rack to look at — a desk tower has no
+            cabinet view, and an inert toggle is worse than no toggle. */}
+        {rackAvailable && (
+          <div className="flex border border-[var(--line-mid)] bg-[var(--color-surface)]">
+            {(["node", "rack"] as View[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                aria-pressed={view === v}
+                className={`px-2.5 py-1 t-data text-[10px] uppercase tracking-[0.08em] transition-colors ${
+                  view === v ? "bg-acc text-[var(--color-acc-ink)]" : "text-ink-2 hover:text-ink hover:bg-[var(--wash)]"
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        )}
+        {errorIds.length > 0 && (
+          <span className="pill pill-err pointer-events-none">
+            {errorIds.length} part{errorIds.length > 1 ? "s" : ""} conflict
+          </span>
+        )}
+      </div>
 
       <div className="absolute bottom-3 left-3 t-data text-[10px] text-ink-3 pointer-events-none leading-relaxed">
         drag to orbit · scroll to zoom · right-drag to pan

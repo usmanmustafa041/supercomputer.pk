@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Configurator from "./Configurator";
 import { getById } from "@/lib/catalog";
+import type { Kind } from "@/lib/catalog";
 import { suggestChassis, suitsTarget } from "@/lib/catalog/fit";
+import { SLOTS } from "./slots";
 import type { BuildLine, Target } from "@/lib/compat/types";
 
 export const metadata: Metadata = {
@@ -22,13 +24,29 @@ export default async function ConfigurePage({
   // effect means the configuration renders validated on first paint, with no
   // empty-then-populated flash and no round trip.
   const b = typeof sp.b === "string" ? sp.b : "";
+
+  /**
+   * Quantities are clamped here as well as in the configurator. The caps used
+   * to live only in the click handlers, so a URL carrying `*12` on a
+   * motherboard rehydrated a build no node could ever be, and the viewport
+   * quietly drew one board while the list claimed twelve.
+   */
+  const seen = new Map<Kind, number>();
   let initialLines: BuildLine[] = b
     .split(",")
     .filter(Boolean)
     .map((token) => {
       const [id, qty] = token.split("*");
       const product = getById(id);
-      return product ? { product, qty: Math.max(1, Number(qty ?? 1)) } : null;
+      if (!product) return null;
+      const cap = SLOTS.find((s) => s.kind === product.kind)?.maxPerNode ?? 99;
+      const used = seen.get(product.kind) ?? 0;
+      const room = Math.max(0, cap - used);
+      if (room === 0) return null;
+      const want = Math.max(1, Number(qty ?? 1));
+      const granted = Math.min(want, room);
+      seen.set(product.kind, used + granted);
+      return { product, qty: granted };
     })
     .filter((l): l is BuildLine => l !== null);
 
