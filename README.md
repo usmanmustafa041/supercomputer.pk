@@ -79,6 +79,17 @@ no longer holds.
 reachable retailers, cached an hour. Without it, every external offer is a deep link to that retailer's own
 search, labelled as such. A stale scraped price shown as current is worse than no price.
 
+## Themes
+
+Dark is the brand default; light is a deliberate alternative rather than a reaction to system preference.
+Both palettes come from one token set: `@theme inline` makes Tailwind emit `var(--c-*)` into utilities
+instead of baking literals, so the whole thing swaps from one attribute on `<html>`. An inline script in
+`<head>` applies the stored choice before first paint. Append `?theme=light` or `?theme=dark` to any URL to
+force one — useful for screenshots and for sharing a link that opens the way you meant it to.
+
+The part drawings carry their own `--art-*` palette so they read as machined metal on white rather than as
+photo negatives of the dark versions.
+
 ## Imagery
 
 There are no photographs. `src/components/art/PartArt.tsx` draws each part as a technical elevation from

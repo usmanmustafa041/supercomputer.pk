@@ -27,6 +27,19 @@ function pick(seed: number, salt: number, min: number, max: number): number {
   return min + (v % (max - min + 1));
 }
 
+/**
+ * Quantises a computed coordinate.
+ *
+ * Math.cos and Math.sin can differ by one unit in the last place between
+ * Node's V8 and the browser's, so the server serialises 65.07179676972449
+ * where the client computes 65.0717967697245 — React reports that as a
+ * hydration mismatch. Three decimals is far finer than a 200-unit viewBox can
+ * show, and it makes both sides agree exactly.
+ */
+function q(n: number): number {
+  return Math.round(n * 1000) / 1000;
+}
+
 const INK = "var(--art-ink)";
 const INK_HI = "var(--art-ink-hi)";
 const ACC = "var(--color-acc)";
@@ -101,10 +114,10 @@ function GpuArt({ p, s }: { p: Extract<Product, { kind: "gpu" }>; s: number }) {
                 return (
                   <line
                     key={k}
-                    x1={cx + Math.cos(a) * r * 0.32}
-                    y1={cy + Math.sin(a) * r * 0.32}
-                    x2={cx + Math.cos(a + 0.5) * r * 0.92}
-                    y2={cy + Math.sin(a + 0.5) * r * 0.92}
+                    x1={q(cx + Math.cos(a) * r * 0.32)}
+                    y1={q(cy + Math.sin(a) * r * 0.32)}
+                    x2={q(cx + Math.cos(a + 0.5) * r * 0.92)}
+                    y2={q(cy + Math.sin(a + 0.5) * r * 0.92)}
                     stroke={INK}
                     strokeWidth="0.6"
                     opacity="0.85"
@@ -301,7 +314,7 @@ function PsuArt({ p }: { p: Extract<Product, { kind: "psu" }> }) {
               <circle cx="70" cy={57 + i * 38} r="11" fill="none" stroke={INK} strokeWidth="0.8" />
               {Array.from({ length: 6 }).map((_, k) => {
                 const a = (k / 6) * Math.PI * 2;
-                return <line key={k} x1={70 + Math.cos(a) * 4} y1={57 + i * 38 + Math.sin(a) * 4} x2={70 + Math.cos(a + 0.6) * 10} y2={57 + i * 38 + Math.sin(a + 0.6) * 10} stroke={INK} strokeWidth="0.6" />;
+                return <line key={k} x1={q(70 + Math.cos(a) * 4)} y1={q(57 + i * 38 + Math.sin(a) * 4)} x2={q(70 + Math.cos(a + 0.6) * 10)} y2={q(57 + i * 38 + Math.sin(a + 0.6) * 10)} stroke={INK} strokeWidth="0.6" />;
               })}
               <rect x="92" y={50 + i * 38} width="26" height="14" fill="var(--art-fill-3)" stroke={INK} strokeWidth="0.6" />
               <circle cx="140" cy={57 + i * 38} r="2" fill={i === 0 ? "var(--art-led)" : ACC} opacity="0.7" />
@@ -317,7 +330,7 @@ function PsuArt({ p }: { p: Extract<Product, { kind: "psu" }> }) {
           <circle cx="100" cy="72" r="7" fill="var(--art-fill-3)" stroke={INK_HI} strokeWidth="0.7" />
           {Array.from({ length: 9 }).map((_, k) => {
             const a = (k / 9) * Math.PI * 2;
-            return <line key={k} x1={100 + Math.cos(a) * 8} y1={72 + Math.sin(a) * 8} x2={100 + Math.cos(a + 0.55) * 28} y2={72 + Math.sin(a + 0.55) * 28} stroke={INK} strokeWidth="0.7" opacity="0.9" />;
+            return <line key={k} x1={q(100 + Math.cos(a) * 8)} y1={q(72 + Math.sin(a) * 8)} x2={q(100 + Math.cos(a + 0.55) * 28)} y2={q(72 + Math.sin(a + 0.55) * 28)} stroke={INK} strokeWidth="0.7" opacity="0.9" />;
           })}
           <rect x="46" y="40" width="10" height="72" fill="var(--art-fill)" stroke={INK} strokeWidth="0.6" />
           {Array.from({ length: 6 }).map((_, i) => (
@@ -498,7 +511,7 @@ function CoolerArt({ p }: { p: Extract<Product, { kind: "cooler" }> }) {
           {Array.from({ length: 7 }).map((_, k) => {
             const a = (k / 7) * Math.PI * 2;
             const r = Math.min(26, h / 2 - 4);
-            return <line key={k} x1={100 + Math.cos(a) * 5} y1={110 - h / 2 + Math.sin(a) * 5} x2={100 + Math.cos(a + 0.5) * r * 0.9} y2={110 - h / 2 + Math.sin(a + 0.5) * r * 0.9} stroke={INK} strokeWidth="0.6" />;
+            return <line key={k} x1={q(100 + Math.cos(a) * 5)} y1={q(110 - h / 2 + Math.sin(a) * 5)} x2={q(100 + Math.cos(a + 0.5) * r * 0.9)} y2={q(110 - h / 2 + Math.sin(a + 0.5) * r * 0.9)} stroke={INK} strokeWidth="0.6" />;
           })}
         </g>
       )}
