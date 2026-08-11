@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import PartArt from "@/components/art/PartArt";
 import { keyStats } from "@/components/catalog/ProductCard";
-import { CONDITION_LABEL, KIND_LABEL, fmtPkr, type Kind, type Product } from "@/lib/catalog";
+import { CONDITION_LABEL, KIND_LABEL, type Kind, type Product } from "@/lib/catalog";
 
 interface Props {
   kind: Kind;
@@ -14,7 +14,8 @@ interface Props {
 
 export default function PartPicker({ kind, hint, onPick, onClose }: Props) {
   const [q, setQ] = useState("");
-  const [sort, setSort] = useState<"perf" | "price-asc">("perf");
+  // Quote-only storefront: capability is the only sort, price never appears.
+  const sort = "perf" as const;
   const [stockOnly, setStockOnly] = useState(false);
   const [items, setItems] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
@@ -26,7 +27,6 @@ export default function PartPicker({ kind, hint, onPick, onClose }: Props) {
   // Filter changes reset pagination. Doing this in the handlers rather than in
   // an effect avoids a render pass that fetches page N of the old result set.
   const changeQ = (v: string) => { setQ(v); setPage(1); };
-  const toggleSort = () => { setSort((s) => (s === "perf" ? "price-asc" : "perf")); setPage(1); };
   const toggleStock = () => { setStockOnly((v) => !v); setPage(1); };
 
   useEffect(() => {
@@ -108,12 +108,6 @@ export default function PartPicker({ kind, hint, onPick, onClose }: Props) {
             aria-label="Search parts"
           />
           <button
-            onClick={toggleSort}
-            className="btn btn-ghost btn-sm"
-          >
-            {sort === "perf" ? "By capability" : "By price"}
-          </button>
-          <button
             onClick={toggleStock}
             className={`btn btn-sm ${stockOnly ? "btn-primary" : "btn-ghost"}`}
           >
@@ -144,16 +138,11 @@ export default function PartPicker({ kind, hint, onPick, onClose }: Props) {
                       <PartArt product={p} className="w-full h-full" bare />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="t-label text-[9.5px]">{p.brand}</div>
-                          <h3 className="text-[12.5px] font-medium leading-snug clamp-2 group-hover:text-acc transition-colors">
-                            {p.model}
-                          </h3>
-                        </div>
-                        <span className="t-data text-[12px] shrink-0 tabular-nums">
-                          {p.price.onRequest ? "POA" : fmtPkr(p.price.pkr)}
-                        </span>
+                      <div className="min-w-0">
+                        <div className="t-label text-[9.5px]">{p.brand}</div>
+                        <h3 className="text-[12.5px] font-medium leading-snug clamp-2 group-hover:text-acc transition-colors">
+                          {p.model}
+                        </h3>
                       </div>
                       <dl className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
                         {keyStats(p).map(([k, v]) => (

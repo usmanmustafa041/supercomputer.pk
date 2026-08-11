@@ -96,7 +96,8 @@ export default function Footer() {
 
         <div className="mt-12 pt-6 border-t border-[var(--line)] flex flex-col md:flex-row gap-4 md:items-center justify-between">
           <p className="text-[11px] t-data text-ink-3">
-            © {new Date().getFullYear()} {BRAND.legal}. Prices are landed in PKR and include duty and sales tax.
+            © {new Date().getFullYear()} {BRAND.legal}. Every configuration is quoted individually, landed in
+            Pakistan with duty and taxes included.
           </p>
           <p className="text-[11px] t-data text-ink-3">
             Retailer network last verified {VERIFIED_AT}

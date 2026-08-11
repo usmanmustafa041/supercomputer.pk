@@ -46,7 +46,7 @@ export default function Header() {
               <span className="live-dot" />
               <span className="text-ink-1">Lahore &amp; Karachi stock live</span>
             </span>
-            <span className="hidden lg:inline">Landed pricing includes duty &amp; GST</span>
+            <span className="hidden lg:inline">Quotes within one working day</span>
           </div>
           <div className="flex items-center gap-5">
             <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="hover:text-ink transition-colors">

@@ -7,7 +7,7 @@ import PartArt from "@/components/art/PartArt";
 import PartPicker from "./PartPicker";
 import { Telemetry } from "./BuildViewport";
 import { PRESETS, slotsFor, type Slot } from "./slots";
-import { CONDITION_LABEL, fmtPkr, fmtPkrShort, type Kind, type Product } from "@/lib/catalog";
+import { CONDITION_LABEL, type Kind, type Product } from "@/lib/catalog";
 import { checkBuild } from "@/lib/compat/engine";
 import { TARGET_LABEL, type BuildLine, type Finding, type Target } from "@/lib/compat/types";
 
@@ -47,6 +47,8 @@ export default function Configurator({
   const [loadingPreset, setLoadingPreset] = useState(false);
   const [highlight, setHighlight] = useState<string[]>([]);
   const [dragKind, setDragKind] = useState<Kind | null>(null);
+  // Accordion index for the validation list — at most one finding open.
+  const [openFinding, setOpenFinding] = useState<number | null>(null);
 
   useEffect(() => {
     window.history.replaceState(null, "", `/configure${encodeBuild(lines, target)}`);
@@ -121,6 +123,12 @@ export default function Configurator({
     [findings]
   );
 
+  /** The scene draws the cage red when the chassis itself is the conflict. */
+  const chassisConflict = useMemo(() => {
+    const c = lines.find((l) => l.product.kind === "chassis");
+    return c ? errorIds.includes(c.product.id) : false;
+  }, [lines, errorIds]);
+
   return (
     <div className="shell py-6 md:py-9">
       <header className="mb-5">
@@ -191,6 +199,7 @@ export default function Configurator({
                 onDropPart={onDropPart}
                 onDragKind={setDragKind}
                 errorIds={errorIds}
+                chassisConflict={chassisConflict}
               />
             </div>
           </div>
@@ -287,9 +296,6 @@ export default function Configurator({
                                 </span>
                               </div>
                               <div className="flex flex-col items-end gap-1 shrink-0">
-                                <span className="t-data text-[11.5px]">
-                                  {l.product.price.onRequest ? "POA" : fmtPkr(l.product.price.pkr * l.qty)}
-                                </span>
                                 <div className="flex items-center border border-[var(--line-mid)]">
                                   <button
                                     onClick={() => setQty(l.product.id, l.qty - 1)}
@@ -334,9 +340,6 @@ export default function Configurator({
                       <span className="min-w-0 flex-1 text-[12px] truncate">
                         <span className="text-ink-2">{l.qty}x</span> {l.product.brand} {l.product.model}
                       </span>
-                      <span className="t-data text-[11px] shrink-0">
-                        {l.product.price.onRequest ? "POA" : fmtPkr(l.product.price.pkr * l.qty)}
-                      </span>
                       <button
                         onClick={() => setQty(l.product.id, 0)}
                         className="btn btn-ghost btn-sm shrink-0"
@@ -350,15 +353,16 @@ export default function Configurator({
               </section>
             )}
 
+            {/* Quote-only: no running total. The configuration itself is the ask. */}
             <div className="p-4 border-t border-[var(--line)] space-y-2">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="t-label">Total</span>
-                <span key={summary.totalPkr} className="t-display text-[24px] tabular-nums pop">
-                  {fmtPkrShort(summary.totalPkr)}
+                <span className="t-label">Configuration</span>
+                <span key={lines.length} className="t-data text-[13px] tabular-nums pop">
+                  {lines.length} line{lines.length === 1 ? "" : "s"}
                 </span>
               </div>
               <p className="t-data text-[10px] text-ink-3 leading-relaxed">
-                Landed, duty and GST included.
+                Priced per order — send it and we reply within one working day with a landed quotation.
                 {summary.sourcedLines > 0 && ` ${summary.sourcedLines} line${summary.sourcedLines > 1 ? "s" : ""} to source.`}
               </p>
               <Link
@@ -390,24 +394,37 @@ export default function Configurator({
                 No conflicts found. Every check passed against the parts selected so far.
               </p>
             ) : (
+              /* Accordion: every finding is one compact row; the detail opens on
+                 click and opening one closes whichever was open. The flat list
+                 was a very long scroll on any real build. */
               <ul className="divide-y divide-[var(--line)]">
                 {findings.map((f, i) => {
                   const st = SEV_STYLE[f.severity];
+                  const open = openFinding === i;
                   return (
                     <li
                       key={`${f.rule}-${i}`}
-                      className="p-3.5 flex gap-3 cursor-default pop hover:bg-[var(--wash-2)] transition-colors"
-                      style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
                       onMouseEnter={() => setHighlight(f.refs)}
                       onMouseLeave={() => setHighlight([])}
                     >
-                      <span className={`w-1 shrink-0 self-stretch ${st.bar}`} aria-hidden />
-                      <div className="min-w-0">
-                        <span className={`pill ${st.pill}`}>{st.word}</span>
-                        <h3 className="text-[12.5px] font-medium mt-1.5 leading-snug">{f.title}</h3>
-                        <p className="text-[12px] text-ink-1 mt-1 leading-relaxed">{f.detail}</p>
-                        {f.fix && <p className="text-[12px] text-cool mt-1.5 leading-relaxed">→ {f.fix}</p>}
-                      </div>
+                      <button
+                        onClick={() => setOpenFinding(open ? null : i)}
+                        aria-expanded={open}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left hover:bg-[var(--wash-2)] transition-colors"
+                      >
+                        <span className={`w-1 h-4 shrink-0 ${st.bar}`} aria-hidden />
+                        <span className={`pill ${st.pill} shrink-0`}>{st.word}</span>
+                        <span className="text-[12px] font-medium flex-1 min-w-0 truncate">{f.title}</span>
+                        <span className="t-data text-[13px] text-ink-3 shrink-0" aria-hidden>
+                          {open ? "−" : "+"}
+                        </span>
+                      </button>
+                      {open && (
+                        <div className="px-3.5 pb-3 pl-8 pop">
+                          <p className="text-[12px] text-ink-1 leading-relaxed">{f.detail}</p>
+                          {f.fix && <p className="text-[12px] text-cool mt-1.5 leading-relaxed">→ {f.fix}</p>}
+                        </div>
+                      )}
                     </li>
                   );
                 })}

@@ -1,22 +1,23 @@
 /** One place for everything name-shaped. Rename the company here. */
 
 export const BRAND = {
-  name: "TERAFORGE",
-  legal: "Teraforge Compute (Pvt) Ltd",
+  name: "SUPERCOMPUTERS",
+  legal: "Supercomputers (Pvt) Ltd",
   tagline: "Compute infrastructure, delivered in Pakistan.",
   strapline:
     "Refurbished HPC clusters, GPU servers and AI workstations — configured, compatibility-checked and supported locally.",
   cities: ["Lahore", "Karachi", "Islamabad"],
   hq: "Lahore",
-  email: "sales@teraforge.pk",
+  email: "sales@supercomputers.pk",
   phone: "+92 42 3500 0000",
   hours: "Mon-Sat, 09:00-19:00 PKT",
 } as const;
 
+/** The configurator is the product; it leads. */
 export const NAV = [
-  { href: "/catalog", label: "Catalog", desc: "Every part we sell, filterable" },
   { href: "/configure", label: "Configurator", desc: "Build it, we check it" },
   { href: "/systems", label: "Systems", desc: "Prebuilt nodes and clusters" },
+  { href: "/catalog", label: "Catalog", desc: "Every part we sell, filterable" },
   { href: "/sourcing", label: "Sourcing", desc: "Where parts come from" },
 ] as const;
 

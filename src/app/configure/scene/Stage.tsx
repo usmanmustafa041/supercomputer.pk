@@ -25,10 +25,24 @@ function toScene(box: Box, it: Interior): [number, number, number] {
 
 /* ---------------------------------------------------------------- shell */
 
-function Shell({ it, pal, hasChassis }: { it: Interior; pal: ScenePalette; hasChassis: boolean }) {
+const RACK_U_MM = 44.45;
+
+function Shell({
+  it,
+  pal,
+  hasChassis,
+  conflict,
+}: {
+  it: Interior;
+  pal: ScenePalette;
+  hasChassis: boolean;
+  /** True when the chassis itself is a blocking finding — the cage goes red. */
+  conflict: boolean;
+}) {
   const w = u(it.width);
   const h = u(it.height);
   const d = u(it.depth);
+  const uCount = it.rack ? Math.round(it.height / RACK_U_MM) : 0;
 
   return (
     <group position={[0, h / 2, 0]}>
@@ -56,11 +70,21 @@ function Shell({ it, pal, hasChassis }: { it: Interior; pal: ScenePalette; hasCh
         <boxGeometry args={[w, h, d]} />
         <meshBasicMaterial visible={false} />
         <Edges
-          color={hasChassis ? pal.shellEdge : pal.ghost}
-          lineWidth={hasChassis ? 2.2 : 1.2}
+          color={conflict ? pal.err : hasChassis ? pal.shellEdge : pal.ghost}
+          lineWidth={conflict ? 2.6 : hasChassis ? 2.2 : 1.2}
           {...(hasChassis ? {} : { dashed: true, dashSize: 0.12, gapSize: 0.08 })}
         />
       </mesh>
+
+      {/* U-pitch graduations on the back wall, so rack space reads as units
+          rather than as an anonymous volume. */}
+      {uCount > 1 &&
+        Array.from({ length: uCount - 1 }).map((_, i) => (
+          <mesh key={i} position={[0, -h / 2 + u(RACK_U_MM * (i + 1)), -d / 2 + 0.006]}>
+            <boxGeometry args={[w, 0.006, 0.004]} />
+            <meshBasicMaterial color={pal.gridMajor} />
+          </mesh>
+        ))}
 
       {/* Rack ear / front-face marker so the orientation is never ambiguous. */}
       <mesh position={[0, -h / 2 + 0.02, d / 2]}>
@@ -261,6 +285,7 @@ function SceneBody({
   dragKind,
   selected,
   onSelect,
+  chassisConflict,
 }: {
   lines: BuildLine[];
   target: Target;
@@ -268,6 +293,7 @@ function SceneBody({
   dragKind: Kind | null;
   selected: string | null;
   onSelect: (id: string | null) => void;
+  chassisConflict: boolean;
 }) {
   const { interior, placements } = useMemo(() => layout(lines, target), [lines, target]);
   const ghostList = useMemo(() => ghosts(lines, target), [lines, target]);
@@ -311,7 +337,7 @@ function SceneBody({
       <ContactShadows position={[0, 0.001, 0]} opacity={pal.dark ? 0.55 : 0.3} scale={span * 3} blur={2.4} far={4} />
 
       <Reframe it={interior} />
-      <Shell it={interior} pal={pal} hasChassis={hasChassis} />
+      <Shell it={interior} pal={pal} hasChassis={hasChassis} conflict={chassisConflict} />
 
       {ghostList.map((g, i) => (
         <Ghost key={`${g.kind}-${i}`} box={g.box} it={interior} label={g.label} pal={pal} active={dragKind === g.kind} />
@@ -352,9 +378,10 @@ export interface StageProps {
   onDropPart: (kind: Kind) => void;
   onDragKind: (kind: Kind | null) => void;
   errorIds: string[];
+  chassisConflict: boolean;
 }
 
-export default function Stage({ lines, target, dragKind, onDropPart, onDragKind, errorIds }: StageProps) {
+export default function Stage({ lines, target, dragKind, onDropPart, onDragKind, errorIds, chassisConflict }: StageProps) {
   const pal = useScenePalette();
   const [selected, setSelected] = useState<string | null>(null);
   const { interior } = useMemo(() => layout(lines, target), [lines, target]);
@@ -395,6 +422,7 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
           dragKind={dragKind}
           selected={selected}
           onSelect={setSelected}
+          chassisConflict={chassisConflict}
         />
       </Canvas>
 
@@ -406,6 +434,7 @@ export default function Stage({ lines, target, dragKind, onDropPart, onDragKind,
         <span className="pill pill-cool">{TARGET_LABEL[target].toLowerCase()}</span>
         <span className="t-data text-[10px] text-ink-3">
           {Math.round(interior.width)} × {Math.round(interior.height)} × {Math.round(interior.depth)} mm
+          {interior.rack && ` · ${Math.round(interior.height / 44.45)}U`}
         </span>
       </div>
 

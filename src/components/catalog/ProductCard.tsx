@@ -1,6 +1,6 @@
 import Link from "next/link";
 import PartArt from "@/components/art/PartArt";
-import { CONDITION_LABEL, fmtPkr, type Product } from "@/lib/catalog";
+import { CONDITION_LABEL, type Product } from "@/lib/catalog";
 
 /** Two or three numbers that matter for this kind, for the card face. */
 export function keyStats(p: Product): Array<[string, string]> {
@@ -147,11 +147,10 @@ export default function ProductCard({ p, compact = false }: { p: Product; compac
           </dl>
         )}
 
+        {/* No prices anywhere on the storefront — everything is quoted. */}
         <div className="flex items-end justify-between gap-2 pt-2 border-t border-[var(--line)]">
           <div>
-            <div className="t-data text-[15px] font-medium tabular-nums">
-              {p.price.onRequest ? "On request" : fmtPkr(p.price.pkr)}
-            </div>
+            <div className="t-data text-[12px] font-medium text-acc uppercase tracking-[0.08em]">Get a quote</div>
             <div className="t-data text-[10px] text-ink-3 mt-0.5">{p.warrantyMonths}mo warranty</div>
           </div>
           <StockPill p={p} />

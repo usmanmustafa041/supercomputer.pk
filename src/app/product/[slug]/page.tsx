@@ -5,7 +5,7 @@ import PartArt from "@/components/art/PartArt";
 import SpecTable from "@/components/catalog/SpecTable";
 import ProductCard from "@/components/catalog/ProductCard";
 import {
-  CONDITION_LABEL, CONDITION_NOTE, KIND_LABEL, fmtPkr, getBySlug, getFamily, search,
+  CONDITION_LABEL, CONDITION_NOTE, KIND_LABEL, getBySlug, getFamily, search,
 } from "@/lib/catalog";
 import { resolve } from "@/lib/sourcing";
 
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!p) return { title: "Not found" };
   return {
     title: `${p.brand} ${p.model}`,
-    description: `${p.highlights[0]} ${CONDITION_LABEL[p.condition]}, ${p.warrantyMonths} month warranty, landed price in PKR.`,
+    description: `${p.highlights[0]} ${CONDITION_LABEL[p.condition]}, ${p.warrantyMonths} month warranty, quoted per order.`,
   };
 }
 
@@ -119,8 +119,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     <span className={`pill shrink-0 ${s.condition !== "new" ? "pill-acc" : ""}`}>
                       {CONDITION_LABEL[s.condition]}
                     </span>
-                    <span className="t-data text-[12.5px] w-28 text-right shrink-0 tabular-nums">
-                      {s.price.onRequest ? "POA" : fmtPkr(s.price.pkr)}
+                    <span className="t-data text-[11px] text-ink-3 w-24 text-right shrink-0">
+                      {s.avail.inHouse > 0 ? `${s.avail.inHouse} in stock` : `${s.avail.leadDays}d lead`}
                     </span>
                   </Link>
                 ))}
@@ -138,11 +138,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <aside className="lg:sticky lg:top-28 space-y-4">
           <div className="panel-raised ticked">
             <div className="p-5 border-b border-[var(--line)]">
-              <div className="t-display text-[30px] tabular-nums">
-                {p.price.onRequest ? "On request" : fmtPkr(p.price.pkr)}
-              </div>
+              <div className="t-display text-[22px]">Quoted per order</div>
               <p className="t-data text-[10.5px] text-ink-3 mt-1.5 leading-relaxed">
-                Landed in Pakistan. Customs duty and 18% GST included. Delivery quoted separately.
+                Send the request and we reply within one working day with availability, lead time and a landed
+                quotation — duty and taxes included.
               </p>
             </div>
 
@@ -187,9 +186,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       </span>
                       <span className="flex items-center gap-1.5 shrink-0">
                         {o.marketplace && <span className="pill pill-warn">marketplace</span>}
-                        <span className="t-data text-[11px] text-ink-2">
-                          {o.pricePkr ? o.priceLabel : "search"}
-                        </span>
+                        <span className="t-data text-[11px] text-ink-2">view</span>
                       </span>
                     </a>
                   </li>

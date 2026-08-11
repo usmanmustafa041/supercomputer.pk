@@ -3,7 +3,7 @@ import ProductCard from "@/components/catalog/ProductCard";
 import PartArt from "@/components/art/PartArt";
 import HeroRig from "@/components/home/HeroRig";
 import LiveCheck from "@/components/home/LiveCheck";
-import { catalogSize, fmtPkrShort, getByKind, kindCounts, search } from "@/lib/catalog";
+import { catalogSize, getByKind, kindCounts, search } from "@/lib/catalog";
 import { RETAILERS } from "@/lib/sourcing/retailers";
 
 export default function Home() {
@@ -23,7 +23,7 @@ export default function Home() {
     "6 condition grades",
     `${verified} verified retailers`,
     "230V / 3-phase aware",
-    "Landed PKR pricing",
+    "Quotes in one working day",
     "72h burn-in on systems",
     "NDR400 InfiniBand",
     "Lahore · Karachi · Islamabad",
@@ -184,8 +184,8 @@ export default function Home() {
                       </div>
                     ))}
                   </dl>
-                  <span className="t-data text-[14px] mt-auto pt-3">
-                    {sys.price.onRequest ? "On request" : fmtPkrShort(sys.price.pkr)}
+                  <span className="t-data text-[12px] text-acc mt-auto pt-3 uppercase tracking-[0.08em]">
+                    Get a quote
                   </span>
                 </div>
               </Link>

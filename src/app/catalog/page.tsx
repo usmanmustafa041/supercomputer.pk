@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import ProductCard from "@/components/catalog/ProductCard";
 import {
-  CONDITION_LABEL, KIND_LABEL, catalogSize, fmtPkr, search,
+  CONDITION_LABEL, KIND_LABEL, catalogSize, search,
   type Condition, type Kind, type Query, type Segment,
 } from "@/lib/catalog";
 
@@ -16,10 +16,9 @@ type SP = Record<string, string | string[] | undefined>;
 const asArray = (v: string | string[] | undefined): string[] =>
   v == null ? [] : Array.isArray(v) ? v.flatMap((s) => s.split(",")) : v.split(",").filter(Boolean);
 
+/** No price sorts — the storefront is quote-only. */
 const SORTS: Array<[NonNullable<Query["sort"]>, string]> = [
   ["perf", "Capability"],
-  ["price-asc", "Price, low first"],
-  ["price-desc", "Price, high first"],
   ["newest", "Newest"],
   ["relevance", "Relevance"],
 ];
@@ -165,13 +164,6 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-[var(--line)]">
             <p className="t-data text-[12px] text-ink-2">
               Page {res.page} of {res.pages}
-              {res.total > 0 && (
-                <>
-                  {" · "}
-                  {fmtPkr(Math.min(...res.items.map((i) => i.price.pkr)))} —{" "}
-                  {fmtPkr(Math.max(...res.items.map((i) => i.price.pkr)))} on this page
-                </>
-              )}
             </p>
             <nav className="flex items-center gap-1" aria-label="Sort">
               <span className="t-label mr-1.5">Sort</span>

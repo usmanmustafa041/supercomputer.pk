@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import PartArt from "@/components/art/PartArt";
-import { fmtPkrShort, getByKind } from "@/lib/catalog";
+import { getByKind } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Systems",
@@ -123,9 +123,7 @@ export default async function SystemsPage({
 
             <div className="md:w-52 md:text-right flex md:flex-col items-center md:items-end gap-3 justify-between">
               <div>
-                <div className="t-display text-[24px] tabular-nums">
-                  {s.price.onRequest ? "On request" : fmtPkrShort(s.price.pkr)}
-                </div>
+                <div className="t-data text-[13px] text-acc uppercase tracking-[0.08em]">Quoted per order</div>
                 <p className="t-data text-[10px] text-ink-3 mt-1">
                   {s.avail.leadDays} working days
                 </p>

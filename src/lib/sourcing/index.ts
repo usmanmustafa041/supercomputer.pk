@@ -53,8 +53,8 @@ function houseOffer(p: Product): Offer {
   if (p.avail.inHouse > 0) {
     return {
       kind: "in-house",
-      seller: "TERAFORGE",
-      sellerId: "teraforge",
+      seller: "SUPERCOMPUTERS",
+      sellerId: "supercomputers",
       url: `/product/${p.slug}`,
       pricePkr: p.price.pkr,
       priceLabel: p.price.onRequest ? "On request" : fmtPkr(p.price.pkr),
@@ -68,8 +68,8 @@ function houseOffer(p: Product): Offer {
 
   return {
     kind: "indent",
-    seller: "TERAFORGE",
-    sellerId: "teraforge",
+    seller: "SUPERCOMPUTERS",
+    sellerId: "supercomputers",
     url: `/product/${p.slug}`,
     pricePkr: p.price.onRequest ? undefined : p.price.pkr,
     priceLabel: p.price.onRequest ? "Quoted on request" : fmtPkr(p.price.pkr),
