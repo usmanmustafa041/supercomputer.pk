@@ -1,9 +1,10 @@
 /**
  * Catalog schema.
  *
- * Every field here exists because the compatibility engine or the sourcing
- * layer reads it. If a spec is decorative it belongs in `highlights`, not in
- * the typed body — that keeps `src/lib/compat` honest about what it can check.
+ * Every field here exists because the compatibility engine, the 3D layout or
+ * the quotation reads it. If a spec is decorative it belongs in `highlights`,
+ * not in the typed body — that keeps `src/lib/compat` honest about what it can
+ * actually check.
  */
 
 export type Kind =
@@ -127,10 +128,9 @@ interface Base {
   /** Family id this SKU was expanded from — groups variants together. */
   family: string;
   /**
-   * Clean query for external retailer search: the part as a Pakistani shop
-   * would list it, without our condition grade, partner tier or internal SKU.
-   * Searching "GIGABYTE RTX 5090 GAMING OC Refurbished Grade A" finds nothing;
-   * searching "RTX 5090" finds everything.
+   * The part as it would be listed on a supplier's price list: no condition
+   * grade, no board-partner tier, no internal SKU. Used for catalog search and
+   * for matching against inbound supplier stock lists.
    */
   searchKey: string;
 }

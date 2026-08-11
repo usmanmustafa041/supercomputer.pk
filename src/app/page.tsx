@@ -4,7 +4,6 @@ import PartArt from "@/components/art/PartArt";
 import HeroRig from "@/components/home/HeroRig";
 import LiveCheck from "@/components/home/LiveCheck";
 import { catalogSize, getByKind, kindCounts, search } from "@/lib/catalog";
-import { RETAILERS } from "@/lib/sourcing/retailers";
 
 export default function Home() {
   const total = catalogSize();
@@ -14,14 +13,14 @@ export default function Home() {
     .sort((a, b) => b.bf16Tflops - a.bf16Tflops || b.coresTotal - a.coresTotal)
     .slice(0, 3);
   const inStock = search({ inStockOnly: true, sort: "perf", perPage: 4 }).items;
-  const verified = RETAILERS.filter((r) => r.reach === "direct").length;
+  const heldLines = search({ inStockOnly: true, perPage: 1 }).total;
 
   // Ticker content: real catalog extremes, not invented marketing numbers.
   const ticker = [
     `${total.toLocaleString()} SKUs`,
     "50 compatibility rules",
     "6 condition grades",
-    `${verified} verified retailers`,
+    `${heldLines.toLocaleString()} lines in stock`,
     "230V / 3-phase aware",
     "Quotes in one working day",
     "72h burn-in on systems",
@@ -220,7 +219,7 @@ export default function Home() {
         <div className="shell py-12 md:py-16 grid gap-px bg-[var(--line)] md:grid-cols-3 border border-[var(--line)] mt-0">
           {[
             ["Graded honestly", "Six condition grades, each with a written test regime and warranty term. Tested pulls are labelled as tested pulls.", "/grading"],
-            ["Sourced openly", `${verified} Pakistani retailers, every domain probed before it shipped. If we are out of stock we tell you who is not.`, "/sourcing"],
+            ["Stocked and supported", "Everything ships from our own inventory or our own import channel. One supplier, one invoice, one warranty to call on.", "/catalog"],
             ["Specified locally", "230V mains, three-phase past 7.4kW, load-shedding and generator transfer. The rules account for all of it.", "/rules"],
           ].map(([title, body, href]) => (
             <Link key={title} href={href} className="bg-[var(--color-surface)] p-6 md:p-8 group hover:bg-[var(--color-raised)] transition-colors">

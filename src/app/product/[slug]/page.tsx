@@ -7,7 +7,7 @@ import ProductCard from "@/components/catalog/ProductCard";
 import {
   CONDITION_LABEL, CONDITION_NOTE, KIND_LABEL, getBySlug, getFamily, search,
 } from "@/lib/catalog";
-import { resolve } from "@/lib/sourcing";
+import { BRAND } from "@/lib/brand";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -24,12 +24,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const p = getBySlug(slug);
   if (!p) notFound();
 
-  const sourcing = resolve(p);
   const siblings = getFamily(p.family).filter((s) => s.id !== p.id);
   const related = search({ kind: [p.kind], tags: p.tags.slice(0, 1), perPage: 5 }).items.filter((r) => r.family !== p.family);
-
-  const external = sourcing.offers.filter((o) => o.kind === "external");
-  const house = sourcing.offers.find((o) => o.kind !== "external")!;
 
   return (
     <div className="shell py-8 md:py-11">
@@ -146,15 +142,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="p-5 border-b border-[var(--line)]">
-              <h2 className="t-label mb-2.5">From us</h2>
+              <h2 className="t-label mb-2.5">Availability</h2>
               <div className="flex items-center gap-2 mb-2">
-                {house.kind === "in-house" ? (
-                  <span className="pill pill-ok"><span className="live-dot" />{house.stock} in stock</span>
+                {p.avail.inHouse > 0 ? (
+                  <span className="pill pill-ok">
+                    <span className="live-dot" />
+                    {p.avail.inHouse} in stock
+                  </span>
                 ) : (
-                  <span className="pill pill-cool">{house.leadDays} working days</span>
+                  <span className="pill pill-cool">{p.avail.leadDays} working days</span>
                 )}
               </div>
-              <p className="text-[12.5px] text-ink-1 leading-relaxed">{house.note}</p>
+              <p className="text-[12.5px] text-ink-1 leading-relaxed">
+                {p.avail.inHouse > 0
+                  ? `Held in our ${BRAND.hq} warehouse, tested and ready to dispatch.`
+                  : p.avail.indentOnly
+                    ? `Brought in on our own import channel against a confirmed order — about ${p.avail.leadDays} working days, landed with duty and clearing handled by us.`
+                    : `Not on the shelf this moment. About ${p.avail.leadDays} working days from our regional stock.`}
+              </p>
               <Link href={`/quote?b=${p.id}`} className="btn btn-primary w-full mt-4">
                 Request a quote
               </Link>
@@ -164,37 +169,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="p-5">
-              <h2 className="t-label mb-1">Also available in Pakistan</h2>
-              <p className="text-[11.5px] text-ink-3 mb-3 leading-relaxed">
-                Verified retailers that stock this category. Links open a live search on their own site — we do
-                not mirror their prices.
-              </p>
-              <ul className="space-y-px bg-[var(--line)] border border-[var(--line)]">
-                {external.map((o) => (
-                  <li key={o.sellerId} className="bg-[var(--color-surface)]">
-                    <a
-                      href={o.url}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className="flex items-center justify-between gap-2 px-3 py-2.5 hover:bg-[var(--color-raised)] transition-colors group"
-                    >
-                      <span className="min-w-0">
-                        <span className="text-[12.5px] group-hover:text-acc transition-colors block truncate">
-                          {o.seller}
-                        </span>
-                        <span className="t-data text-[10px] text-ink-3">{o.city}</span>
-                      </span>
-                      <span className="flex items-center gap-1.5 shrink-0">
-                        {o.marketplace && <span className="pill pill-warn">marketplace</span>}
-                        <span className="t-data text-[11px] text-ink-2">view</span>
-                      </span>
-                    </a>
+              <h2 className="t-label mb-2.5">What you get from us</h2>
+              <ul className="space-y-2">
+                {[
+                  `${p.warrantyMonths} month warranty, handled here rather than shipped abroad`,
+                  "Tested and, where used, re-pasted before dispatch",
+                  `Delivered to ${BRAND.cities.join(", ")} and onward by courier`,
+                  "One invoice and one point of contact for the whole build",
+                ].map((t) => (
+                  <li key={t} className="flex gap-2.5 text-[12.5px] text-ink-1 leading-relaxed">
+                    <span className="mt-1.5 w-1 h-1 bg-acc shrink-0" aria-hidden />
+                    {t}
                   </li>
                 ))}
               </ul>
-              <Link href="/sourcing" className="t-data text-[11px] text-acc hover:underline mt-3 inline-block">
-                How this list is verified
-              </Link>
             </div>
           </div>
         </aside>

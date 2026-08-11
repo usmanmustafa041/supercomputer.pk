@@ -52,7 +52,7 @@ export interface PowerBudget {
 
 export interface BuildSummary {
   totalPkr: number;
-  /** Lines we hold in our own stock versus lines needing external sourcing. */
+  /** Lines already on our shelf versus lines we would import for the order. */
   inHouseLines: number;
   sourcedLines: number;
   maxLeadDays: number;

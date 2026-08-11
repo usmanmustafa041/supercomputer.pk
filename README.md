@@ -90,25 +90,37 @@ Things that bit me, all visible only once rendered:
   the entire build invisible. Position and scale are now declared on the mesh; the frame loop only adds
   the hover lift.
 
-## Sourcing
+## Inventory and quoting
 
-Resolution order is our own stock, then our import channel, then Pakistani retailers.
+We are the store. Everything comes from our own stock or our own import channel — there is no outbound
+linking to other retailers anywhere on the site. `Availability` on each SKU carries `inHouse`, `leadDays`
+and `indentOnly`, and the product page states which of the three applies in plain words.
 
-`src/lib/sourcing/retailers.ts` is the registry, and every claim in it was probed over HTTPS rather than
-assumed. That check deleted five domains I had guessed at — `servermall.pk`, `netmall.pk`,
-`digitalworldpk.com`, `vatancomputers.com` and `hashmiitstore.com` are all NXDOMAIN. Search endpoints were
-probed separately, which also mattered: IndusTech's OpenCart route returns 401 while a plainer path works,
-and Mega.pk's search 500s entirely. Both are recorded as what they are.
+An earlier version resolved to verified Pakistani retailers when we were out of stock. That was the wrong
+model for this business and the whole `src/lib/sourcing` module, its page, its API route and its
+verification script were removed rather than left dormant.
 
-Four stores (Computer Zone, PakLap, iShopping, MyShop) are real but sit behind a WAF that rejects
-datacenter traffic. They are linked to and never read from.
+**Nothing shows a price.** The storefront is quote-only end to end. Price data still exists in the catalog
+layer because the quotation needs it, but it never reaches a screen.
 
-`npm run sourcing:verify` re-checks the whole registry against the live web and exits non-zero if a claim
-no longer holds.
+`/quote` collects the configuration, the customer and the workload, then produces a **printable A4
+requirement document** — brand header with a `SC-YYYYMMDD-XXXX` reference, the itemised configuration with
+condition grade and SKU, derived figures (peak draw, current at 230V, heat, rack units, cores, memory,
+BF16), and the full compatibility report with blocking findings separated from warnings.
 
-**Live pricing is off by default.** Set `FIRECRAWL_API_KEY` and external offers get real prices read from
-reachable retailers, cached an hour. Without it, every external offer is a deep link to that retailer's own
-search, labelled as such. A stale scraped price shown as current is worse than no price.
+The document is rendered as ordinary markup and printed by the browser rather than built with a PDF
+library: the print engine gives better typography than jsPDF at zero added bytes, and the layout lives in
+one place instead of being written twice. `src/app/quote/print.css` owns the A4 page box and forces an
+ink-friendly palette, because the site is dark and a dark background prints as a solid black page.
+
+One trap worth recording: the first print stylesheet hid non-document content with
+`body > *:not(#quote-print-root)`, which printed a blank page — the print root is nested several levels
+inside the layout, so that rule hid its own wrapper. It now hides with `visibility` and re-reveals by ID,
+which works at any depth.
+
+**There is no backend yet.** Submitting composes a `mailto:` draft carrying the whole request so nothing is
+silently dropped, and the customer prints the PDF alongside it. Swap that for a POST once the
+email-versus-database question is settled.
 
 ## Themes
 

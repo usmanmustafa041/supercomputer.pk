@@ -17,8 +17,8 @@ export const BRAND = {
 export const NAV = [
   { href: "/configure", label: "Configurator", desc: "Build it, we check it" },
   { href: "/systems", label: "Systems", desc: "Prebuilt nodes and clusters" },
-  { href: "/catalog", label: "Catalog", desc: "Every part we sell, filterable" },
-  { href: "/sourcing", label: "Sourcing", desc: "Where parts come from" },
+  { href: "/catalog", label: "Catalog", desc: "Every part we stock, filterable" },
+  { href: "/quote", label: "Request a quote", desc: "Send us a configuration" },
 ] as const;
 
 /** Used on the home page. Deliberately not superlatives. */
@@ -35,8 +35,8 @@ export const PILLARS = [
   },
   {
     k: "03",
-    title: "If we do not have it, we say where does",
-    body: "Our own stock is checked first. When we are out, the configurator links to verified Pakistani retailers that carry the part. We would rather send you elsewhere than sit on an order for six weeks.",
+    title: "One supplier, one invoice, one warranty",
+    body: "Every part in the configurator comes from our own inventory or our own import channel. You deal with us for the build, the delivery and anything that goes wrong afterwards — not with six vendors who each blame the others.",
   },
   {
     k: "04",

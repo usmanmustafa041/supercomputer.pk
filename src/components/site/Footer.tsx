@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
-import { VERIFIED_AT } from "@/lib/sourcing/retailers";
 import Mark from "./Mark";
 
 const COLUMNS: Array<{ head: string; links: Array<[string, string]> }> = [
@@ -41,7 +40,7 @@ const COLUMNS: Array<{ head: string; links: Array<[string, string]> }> = [
       ["Configurator", "/configure"],
       ["Compatibility rules", "/rules"],
       ["Condition grading", "/grading"],
-      ["Sourcing network", "/sourcing"],
+      ["In stock now", "/catalog?stock=1"],
       ["Request a quote", "/quote"],
     ],
   },
@@ -100,7 +99,7 @@ export default function Footer() {
             Pakistan with duty and taxes included.
           </p>
           <p className="text-[11px] t-data text-ink-3">
-            Retailer network last verified {VERIFIED_AT}
+            Stocked, built and warranted in {BRAND.hq}
           </p>
         </div>
 

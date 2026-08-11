@@ -1,0 +1,276 @@
+/**
+ * Print layout for the requirement document.
+ *
+ * The document lives in the normal page flow but is hidden on screen; the
+ * preview panel shows it in a scaled frame. At print time everything else on
+ * the page is suppressed and this becomes the only thing on the paper.
+ *
+ * Deliberately ink-friendly: the site is dark, and a dark background prints as
+ * a solid black page that empties a cartridge and reads badly.
+ */
+
+.quote-doc {
+  /* Hidden on screen unless a preview wrapper opts in. */
+  display: none;
+  background: #ffffff;
+  color: #101318;
+  font-family: var(--f-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  padding: 16mm 15mm;
+  width: 210mm;
+  min-height: 297mm;
+  box-sizing: border-box;
+}
+
+/* The on-screen preview renders the same markup at a reduced scale. */
+.quote-preview .quote-doc {
+  display: block;
+  transform-origin: top left;
+  box-shadow: 0 8px 40px -20px rgb(0 0 0 / 0.6);
+}
+
+.quote-doc * {
+  border-color: #c8ced6;
+}
+
+/* ------------------------------------------------------------------ head */
+
+.qd-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12mm;
+  border-bottom: 2pt solid #101318;
+  padding-bottom: 4mm;
+  margin-bottom: 8mm;
+}
+
+.qd-brand {
+  font-family: var(--f-display), var(--f-sans), sans-serif;
+  font-size: 20pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+
+.qd-sub {
+  font-size: 8.5pt;
+  color: #5a626d;
+  margin: 1mm 0 0;
+}
+
+.qd-meta {
+  text-align: right;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 8pt;
+  color: #3d444e;
+}
+.qd-meta p { margin: 0 0 0.8mm; }
+.qd-meta strong { color: #101318; }
+
+.qd-title {
+  font-family: var(--f-display), var(--f-sans), sans-serif;
+  font-size: 15pt;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 7mm;
+}
+
+/* --------------------------------------------------------------- sections */
+
+.qd-section {
+  margin-bottom: 7mm;
+  break-inside: avoid;
+}
+
+.qd-h3 {
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 8pt;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #101318;
+  border-bottom: 0.5pt solid #c8ced6;
+  padding-bottom: 1.5mm;
+  margin: 0 0 3mm;
+}
+
+.qd-h4 {
+  font-size: 9.5pt;
+  font-weight: 700;
+  margin: 4mm 0 2mm;
+}
+
+.qd-body { margin: 0; }
+.qd-pre { white-space: pre-wrap; }
+
+.qd-note {
+  font-size: 8pt;
+  color: #5a626d;
+  margin: 3mm 0 0;
+  line-height: 1.45;
+}
+
+/* ----------------------------------------------------------------- tables */
+
+.qd-kv {
+  width: 100%;
+  border-collapse: collapse;
+}
+.qd-kv th {
+  text-align: left;
+  font-weight: 500;
+  color: #5a626d;
+  width: 38mm;
+  padding: 1.2mm 0;
+  vertical-align: top;
+}
+.qd-kv td {
+  padding: 1.2mm 0;
+  vertical-align: top;
+}
+
+/* Two columns of key/value pairs, for the derived figures block. */
+.qd-kv-2col {
+  column-count: 2;
+  column-gap: 10mm;
+  display: block;
+}
+.qd-kv-2col tbody { display: block; }
+.qd-kv-2col tr {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  break-inside: avoid;
+  border-bottom: 0.4pt dotted #d5dae1;
+  padding: 0.8mm 0;
+}
+.qd-kv-2col th { width: auto; padding: 0; }
+.qd-kv-2col td {
+  padding: 0;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 9pt;
+  text-align: right;
+}
+
+.qd-lines {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+.qd-lines thead th {
+  text-align: left;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 7.5pt;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5a626d;
+  border-bottom: 0.75pt solid #101318;
+  padding: 0 2mm 1.5mm 0;
+}
+.qd-lines tbody td {
+  padding: 1.6mm 2mm 1.6mm 0;
+  border-bottom: 0.4pt solid #dfe3e9;
+  vertical-align: top;
+}
+.qd-lines tbody tr { break-inside: avoid; }
+.qd-num { font-family: var(--f-mono), ui-monospace, monospace; }
+.qd-mono {
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 8pt;
+  color: #5a626d;
+}
+
+/* ------------------------------------------------------------------ lists */
+
+.qd-list {
+  margin: 0;
+  padding-left: 5mm;
+  font-size: 9pt;
+}
+.qd-list li {
+  margin-bottom: 2mm;
+  break-inside: avoid;
+  line-height: 1.45;
+}
+.qd-list em {
+  color: #5a626d;
+  font-style: italic;
+}
+
+/* ----------------------------------------------------------------- footer */
+
+.qd-foot {
+  margin-top: 10mm;
+  padding-top: 3mm;
+  border-top: 0.5pt solid #c8ced6;
+  font-size: 7.5pt;
+  color: #5a626d;
+  line-height: 1.45;
+}
+.qd-foot p { margin: 0 0 1.5mm; }
+
+.qd-break { break-before: auto; }
+
+/* =============================================================== printing */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Force the ink-friendly palette regardless of site theme. */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #101318 !important;
+  }
+
+  /**
+   * Hide everything, then reveal only the document.
+   *
+   * This uses visibility rather than display because the print root is nested
+   * several levels inside the layout — a `body > *` display rule hid the very
+   * wrapper containing it and printed a blank page. Visibility is inherited,
+   * so hidden ancestors still let a descendant opt back in, and the ID
+   * selector outranks the blanket rule.
+   */
+  body * {
+    visibility: hidden;
+  }
+
+  #quote-print-root,
+  #quote-print-root * {
+    visibility: visible;
+  }
+
+  /* Pulled out of flow so the hidden-but-still-laid-out chrome above it does
+     not push the document down the page. */
+  #quote-print-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: block !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .quote-doc {
+    display: block !important;
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+    transform: none !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
