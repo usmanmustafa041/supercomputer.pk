@@ -1,0 +1,83 @@
+# The whole stack: database, API, website.
+#
+#   docker compose up --build
+#
+# Website  http://localhost:3000
+# API      http://localhost:8000
+# API docs http://localhost:8000/docs
+#
+# Three containers rather than one so each can be restarted, scaled or replaced
+# on its own — a code change in the website does not take the database down.
+
+name: supercomputers
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-supercomputers}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supercomputers}
+      POSTGRES_DB: ${POSTGRES_DB:-supercomputers}
+    volumes:
+      # Named volume, so the data survives `docker compose down`.
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # Exposed for a GUI client during development. Drop this in production.
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-supercomputers} -d ${POSTGRES_DB:-supercomputers}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER:-supercomputers}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supercomputers}
+      POSTGRES_DB: ${POSTGRES_DB:-supercomputers}
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@supercomputers.pk}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    volumes:
+      # The catalog export, read once on an empty database.
+      - ./backend/seed:/app/seed:ro
+    depends_on:
+      db:
+        # Waits for Postgres to actually accept connections, not just to start.
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Baked in at build time: Next.js inlines NEXT_PUBLIC_* into the bundle.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    environment:
+      # Server-side calls go container-to-container, not via the host.
+      API_INTERNAL_URL: http://api:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

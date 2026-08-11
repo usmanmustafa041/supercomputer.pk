@@ -13,7 +13,8 @@
     "layout:dump": "tsx scripts/layout-dump.ts",
     "dev:browser": "scripts\\dev-browser.cmd",
     "check": "npm run typecheck && npm run lint && npm run compat:test && npm run preset:test",
-    "preset:test": "tsx scripts/preset-check.ts"
+    "preset:test": "tsx scripts/preset-check.ts",
+    "catalog:export": "tsx scripts/catalog-export.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",
