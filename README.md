@@ -129,6 +129,23 @@ actual power connectors. Hotlinking retailer photography would be legally questi
 incoherent; you get four lighting setups in one grid. This way 2,777 SKUs share one camera, one line
 weight and one palette, and nothing 404s.
 
+## The hydration warning that is not a bug
+
+If you develop with Bitdefender's browser extension enabled, React will report a hydration mismatch on
+every page. Every diff line in it reads `bis_skin_checked="1"` — an attribute the extension writes into
+the DOM before React hydrates. It is not an application bug and no code change fixes it:
+`suppressHydrationWarning` only covers the element it sits on, never the hundreds of descendants the
+extension rewrites.
+
+```
+npm run dev:browser      # clean Chrome profile, extensions disabled
+```
+
+That opens a separate profile so your everyday browsing keeps its extensions. Verified with a
+DevTools-protocol console capture across the home page, catalog, systems and the configurator (including
+driving the target buttons): zero console errors, zero exceptions, zero hydration warnings once extensions
+are out of the picture. The alternative is excluding `localhost` in the extension's own settings.
+
 ## What is not done
 
 - **No backend.** The quote form composes a `mailto:` draft. There is no CRM, no order pipeline, no

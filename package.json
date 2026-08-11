@@ -12,6 +12,7 @@
     "compat:test": "tsx scripts/compat-check.ts",
     "sourcing:verify": "tsx scripts/verify-sourcing.ts",
     "layout:dump": "tsx scripts/layout-dump.ts",
+    "dev:browser": "scripts\\dev-browser.cmd",
     "check": "npm run typecheck && npm run lint && npm run compat:test"
   },
   "dependencies": {
