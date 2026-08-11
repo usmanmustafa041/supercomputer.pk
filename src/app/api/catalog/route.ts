@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getById, getByKind, search, type Kind, type Product } from "@/lib/catalog";
+import { suggestChassis, type Target } from "@/lib/catalog/fit";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,27 @@ export const runtime = "nodejs";
  */
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
+
+  /**
+   * ?chassisFor=rack&ids=…  — re-home a build into a chassis that suits a new
+   * deployment target, keeping every other part. Runs server-side because it
+   * scores the whole chassis catalog against the build's real constraints.
+   */
+  const chassisFor = sp.get("chassisFor") as Target | null;
+  if (chassisFor) {
+    const lines = (sp.get("ids") ?? "")
+      .split(",")
+      .filter(Boolean)
+      .map((tok) => {
+        const [id, qty] = tok.split("*");
+        const product = getById(id);
+        return product ? { product, qty: Math.max(1, Number(qty ?? 1)) } : null;
+      })
+      .filter((l): l is { product: Product; qty: number } => l !== null);
+
+    const hit = suggestChassis(lines, chassisFor);
+    return NextResponse.json({ chassis: hit?.chassis ?? null, relaxed: hit?.relaxed ?? [] });
+  }
 
   const ids = sp.get("ids");
   if (ids) {

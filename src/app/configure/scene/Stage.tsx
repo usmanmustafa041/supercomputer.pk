@@ -243,6 +243,64 @@ function Ghost({
   );
 }
 
+/* ------------------------------------------------------------- cluster */
+
+/** A 42U cabinet drawn around the node, with peers stacked above it. */
+function ClusterRack({ it, pal, peers }: { it: Interior; pal: ScenePalette; peers: number }) {
+  const w = u(it.width) + 0.16;
+  const d = u(it.depth) + 0.12;
+  const cabinetH = u(42 * RACK_U_MM);
+  const nodeH = u(it.height);
+
+  return (
+    <group>
+      {/* cabinet outline */}
+      <group position={[0, cabinetH / 2, 0]}>
+        <mesh>
+          <boxGeometry args={[w, cabinetH, d]} />
+          <meshBasicMaterial visible={false} />
+          <Edges color={pal.ghost} lineWidth={1.4} />
+        </mesh>
+      </group>
+
+      {/* mounting rails */}
+      {[-w / 2 + 0.02, w / 2 - 0.02].map((x, i) => (
+        <mesh key={i} position={[x, cabinetH / 2, d / 2 - 0.04]}>
+          <boxGeometry args={[0.03, cabinetH, 0.03]} />
+          <meshStandardMaterial color={pal.metalDark} roughness={0.7} metalness={0.4} />
+        </mesh>
+      ))}
+
+      {/* Peer nodes — the same node repeated up the cabinet. Drawn plainly
+          because they are copies, not separate configurations. */}
+      {Array.from({ length: peers }).map((_, i) => {
+        const y = nodeH * (i + 1) + u(6) * (i + 1);
+        if (y + nodeH > cabinetH) return null;
+        return (
+          <group key={i} position={[0, y + nodeH / 2, 0]}>
+            <mesh>
+              <boxGeometry args={[u(it.width), nodeH * 0.92, u(it.depth)]} />
+              <meshStandardMaterial
+                color={pal.shell}
+                roughness={0.85}
+                metalness={0.1}
+                transparent
+                opacity={0.5}
+              />
+              <Edges color={pal.shellEdge} lineWidth={1} />
+            </mesh>
+            {/* front-panel accelerator strip, so a peer reads as the same node */}
+            <mesh position={[0, 0, u(it.depth) / 2 + 0.005]}>
+              <planeGeometry args={[u(it.width) * 0.5, nodeH * 0.35]} />
+              <meshBasicMaterial color={pal.accent} transparent opacity={0.35} />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
 /* ----------------------------------------------------------- reframing */
 
 /**
@@ -254,11 +312,11 @@ function Ghost({
  * distances. Nothing appeared to happen, which is what made the target
  * buttons feel dead.
  */
-function Reframe({ it }: { it: Interior }) {
+function Reframe({ it, framedHeight }: { it: Interior; framedHeight: number }) {
   const camera = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
   const w = u(it.width);
-  const h = u(it.height);
+  const h = u(framedHeight);
   const d = u(it.depth);
 
   useEffect(() => {
@@ -298,6 +356,8 @@ function SceneBody({
   const { interior, placements } = useMemo(() => layout(lines, target), [lines, target]);
   const ghostList = useMemo(() => ghosts(lines, target), [lines, target]);
   const hasChassis = lines.some((l) => l.product.kind === "chassis");
+  // A cluster is this node repeated up a cabinet, so draw the cabinet too.
+  const cluster = target === "cluster" && interior.rack;
   const span = Math.max(u(interior.width), u(interior.depth));
 
   return (
@@ -336,8 +396,9 @@ function SceneBody({
 
       <ContactShadows position={[0, 0.001, 0]} opacity={pal.dark ? 0.55 : 0.3} scale={span * 3} blur={2.4} far={4} />
 
-      <Reframe it={interior} />
+      <Reframe it={interior} framedHeight={cluster ? 42 * 44.45 : interior.height} />
       <Shell it={interior} pal={pal} hasChassis={hasChassis} conflict={chassisConflict} />
+      {cluster && <ClusterRack it={interior} pal={pal} peers={7} />}
 
       {ghostList.map((g, i) => (
         <Ghost key={`${g.kind}-${i}`} box={g.box} it={interior} label={g.label} pal={pal} active={dragKind === g.kind} />

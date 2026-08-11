@@ -49,6 +49,15 @@ export default function Configurator({
   const [dragKind, setDragKind] = useState<Kind | null>(null);
   // Accordion index for the validation list — at most one finding open.
   const [openFinding, setOpenFinding] = useState<number | null>(null);
+  /** Notice + undo after a target switch re-homes the build into a new case. */
+  const [rehome, setRehome] = useState<{
+    from: Product;
+    to: Product;
+    relaxed: string[];
+    prevLines: BuildLine[];
+    prevTarget: Target;
+  } | null>(null);
+  const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
     window.history.replaceState(null, "", `/configure${encodeBuild(lines, target)}`);
@@ -101,6 +110,54 @@ export default function Configurator({
       .finally(() => setLoadingPreset(false));
   }, []);
 
+  /**
+   * Changing deployment target moves the build into a chassis that suits it.
+   *
+   * A tower cannot be racked, so previously switching target just turned the
+   * cage red and left you to swap the case by hand. Now the configuration
+   * travels: everything else stays, only the enclosure changes, and the swap
+   * is announced with an undo.
+   */
+  const changeTarget = useCallback(
+    (next: Target) => {
+      if (next === target) return;
+
+      const current = lines.find((l) => l.product.kind === "chassis");
+      const rackWanted = next !== "desk";
+      const fitsAlready =
+        !current || (current.product.kind === "chassis" && (current.product.rackU > 0) === rackWanted);
+
+      setTarget(next);
+      setRehome(null);
+      if (fitsAlready) return;
+
+      const prevLines = lines;
+      const prevTarget = target;
+      setSwitching(true);
+      const ids = lines.map((l) => (l.qty > 1 ? `${l.product.id}*${l.qty}` : l.product.id)).join(",");
+
+      fetch(`/api/catalog?chassisFor=${next}&ids=${ids}`)
+        .then((r) => r.json())
+        .then((d: { chassis: Product | null; relaxed: string[] }) => {
+          if (!d.chassis || !current) return;
+          setLines((prev) =>
+            prev.map((l) => (l.product.id === current.product.id ? { product: d.chassis!, qty: 1 } : l))
+          );
+          setRehome({ from: current.product, to: d.chassis, relaxed: d.relaxed, prevLines, prevTarget });
+        })
+        .catch(() => {})
+        .finally(() => setSwitching(false));
+    },
+    [lines, target]
+  );
+
+  const undoRehome = useCallback(() => {
+    if (!rehome) return;
+    setLines(rehome.prevLines);
+    setTarget(rehome.prevTarget);
+    setRehome(null);
+  }, [rehome]);
+
   /** Dropping a slot tile into the scene opens the picker for that slot. */
   const onDropPart = useCallback(
     (kind: Kind) => {
@@ -139,7 +196,8 @@ export default function Configurator({
             {(Object.keys(TARGET_LABEL) as Target[]).map((t) => (
               <button
                 key={t}
-                onClick={() => setTarget(t)}
+                onClick={() => changeTarget(t)}
+                disabled={switching}
                 className={`btn btn-sm ${target === t ? "btn-primary" : "btn-ghost"}`}
                 aria-pressed={target === t}
               >
@@ -147,13 +205,44 @@ export default function Configurator({
               </button>
             ))}
             {hasLines && (
-              <button onClick={() => setLines([])} className="btn btn-ghost btn-sm">
+              <button
+                onClick={() => {
+                  setLines([]);
+                  setRehome(null);
+                }}
+                className="btn btn-ghost btn-sm"
+              >
                 Clear
               </button>
             )}
           </div>
         </div>
       </header>
+
+      {rehome && (
+        <div className="panel border-l-2 border-l-cool px-4 py-3 mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 pop">
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px]">
+              Moved into <strong className="text-ink">{rehome.to.brand} {rehome.to.model}</strong> —{" "}
+              <span className="text-ink-2">{rehome.from.model} cannot be {target === "desk" ? "used on a desk" : "rack mounted"}.</span>
+            </p>
+            {rehome.relaxed.length > 0 && (
+              <p className="text-[12px] text-warn mt-1 leading-relaxed">
+                Nothing satisfied every constraint, so this compromises on {rehome.relaxed.join(", ")}. Check the
+                validation panel.
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={undoRehome} className="btn btn-ghost btn-sm">
+              Undo
+            </button>
+            <button onClick={() => setRehome(null)} className="btn btn-ghost btn-sm btn-icon" aria-label="Dismiss">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {!hasLines && (
         <section className="mb-5">
