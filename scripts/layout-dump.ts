@@ -1,7 +1,7 @@
 /** Prints the 3D placement of a build so geometry bugs are visible as numbers. */
-import { getById } from "../src/lib/catalog";
-import { layout, ghosts } from "../src/lib/build3d/geometry";
-import type { Product } from "../src/lib/catalog/types";
+import { getById } from "../shared/src/catalog";
+import { layout, ghosts } from "../shared/src/build3d/geometry";
+import type { Product } from "../shared/src/catalog/types";
 
 const ids = (process.argv[2] ?? "").split(",").filter(Boolean);
 const lines = ids

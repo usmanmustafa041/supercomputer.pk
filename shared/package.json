@@ -1,0 +1,27 @@
+{
+  "name": "@supercomputers/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The domain: the catalogue generator, the compatibility engine, and the types both tiers agree on.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./catalog": "./dist/catalog/index.js",
+    "./compat": "./dist/compat/index.js",
+    "./build3d": "./dist/build3d/geometry.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "test": "tsx ../scripts/compat-check.ts && tsx ../scripts/preset-check.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.23.12",
+    "typescript": "^5"
+  }
+}
