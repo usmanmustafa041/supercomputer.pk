@@ -1,0 +1,11 @@
+# Explicit development-only host ports. Do not use this file in production.
+services:
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"
+  minio:
+    ports:
+      - "127.0.0.1:9000:9000"
+  api:
+    ports:
+      - "127.0.0.1:4000:4000"

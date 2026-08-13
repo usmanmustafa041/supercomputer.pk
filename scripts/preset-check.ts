@@ -2,9 +2,9 @@
  * Presets are advertised as known-good starting points, so any blocking
  * finding in one is a bug in the preset. Run: npm run preset:test
  */
-import { getByKind, type Product } from "../src/lib/catalog";
-import { PRESETS } from "../src/app/configure/slots";
-import { checkBuild } from "../src/lib/compat/engine";
+import { getByKind, type Product } from "../shared/src/catalog";
+import { PRESETS } from "../frontend/src/app/configure/slots";
+import { checkBuild } from "../shared/src/compat/engine";
 
 /** Mirrors the /api/catalog?families= resolution the configurator uses. */
 function resolveFamily(fam: string, hint?: string): Product | null {

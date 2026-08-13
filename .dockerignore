@@ -1,6 +1,16 @@
-node_modules
-.next
+# Everything the images do not need. Keeping this tight matters: the build
+# context is sent to the daemon on every build, and node_modules alone is
+# hundreds of megabytes.
+**/node_modules
+**/.next
+**/dist
 .git
-backend
+.env
+data
+demo
+scripts
 *.md
 .claude
+bg.png
+bgwhite.png
+*.rgb

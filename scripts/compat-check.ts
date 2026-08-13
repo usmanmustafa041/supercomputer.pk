@@ -2,9 +2,9 @@
  * Exercises the compatibility engine against builds with known problems.
  * Run: npm run compat:test
  */
-import { allProducts, type Product } from "../src/lib/catalog";
-import { checkBuild } from "../src/lib/compat/engine";
-import type { Build, Target } from "../src/lib/compat/types";
+import { allProducts, type Product } from "../shared/src/catalog";
+import { checkBuild } from "../shared/src/compat/engine";
+import type { Build, Target } from "../shared/src/compat/types";
 
 const all = allProducts();
 const find = (pred: (p: Product) => boolean, what: string): Product => {

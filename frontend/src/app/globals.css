@@ -1,0 +1,698 @@
+@import "tailwindcss";
+
+/* =============================================================
+   TERAFORGE design system
+
+   Dark is the brand default. Light is a deliberate alternative,
+   not a system-preference reaction, the toggle in the header is
+   the only thing that switches it, and the choice persists.
+
+   Colour tokens are declared with `@theme inline` so Tailwind
+   emits `var(--c-*)` into utilities rather than baking literals.
+   That is what lets the whole palette swap at runtime from one
+   attribute on <html>.
+   ============================================================= */
+
+@theme inline {
+  --color-void: var(--c-void);
+  --color-base: var(--c-base);
+  --color-surface: var(--c-surface);
+  --color-raised: var(--c-raised);
+  --color-overlay: var(--c-overlay);
+
+  --color-ink: var(--c-ink);
+  --color-ink-1: var(--c-ink-1);
+  --color-ink-2: var(--c-ink-2);
+  --color-ink-3: var(--c-ink-3);
+
+  --color-acc: var(--c-acc);
+  --color-acc-hot: var(--c-acc-hot);
+  --color-acc-ink: var(--c-acc-ink);
+
+  --color-cool: var(--c-cool);
+  --color-ok: var(--c-ok);
+  --color-warn: var(--c-warn);
+  --color-err: var(--c-err);
+
+  --font-sans: var(--f-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--f-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: var(--f-display), var(--f-sans), system-ui, sans-serif;
+
+  --ease-out-hard: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------------------------------------------------------- dark (default) */
+
+:root {
+  /* Surface ramp. Each step is a visible jump, not a rounding difference.
+     the first pass put four levels inside 3% luminance and everything merged
+     into one flat field. */
+  --c-void: #050609;
+  --c-base: #0B0D12;
+  --c-surface: #14171D;
+  --c-raised: #1D212A;
+  --c-overlay: #262B35;
+
+  --c-ink: #EDEFF2;
+  --c-ink-1: #A3ABB6;
+  --c-ink-2: #757D8A;
+  --c-ink-3: #515966;
+
+  --c-acc: #FF5A1F;
+  --c-acc-hot: #FF7A45;
+  /* Text colour that sits on the accent fill. */
+  --c-acc-ink: #0B0704;
+
+  --c-cool: #29D3EE;
+  --c-ok: #6EE05A;
+  --c-warn: #FFB020;
+  --c-err: #FF4D4D;
+
+  --line: rgb(255 255 255 / 0.10);
+  --line-mid: rgb(255 255 255 / 0.17);
+  --line-hi: rgb(255 255 255 / 0.30);
+  --wash: rgb(255 255 255 / 0.06);
+  --wash-2: rgb(255 255 255 / 0.02);
+
+  /* The rig and the build viewport get their own ramp. Borrowing the generic
+     surface tokens made the rack cavity, uprights and node faces land within a
+     shade of each other. */
+  --rig-shell: #040507;
+  --rig-rail: #2E3542;
+  --rig-node: #1B2029;
+  --rig-node-hot: #2B1D14;
+  --rig-bay: #0A0C11;
+  --rig-line: rgb(255 255 255 / 0.28);
+
+  /* Depth cues for the pseudo-3D viewport. */
+  --lift-1: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 12px 32px -18px rgb(0 0 0 / 0.9);
+  --lift-2: 0 24px 60px -28px rgb(0 0 0 / 1);
+  --grid-ink: rgb(255 255 255 / 0.032);
+
+  /* Palette for the procedural part drawings. Kept separate from UI ink so
+     the illustrations can stay dark-on-light without inverting into mush.
+
+     The body tones sit above the panel they are drawn on, not below it. The
+     first version had every fill darker than its own background, which made a
+     catalogue page look like fifteen holes cut in a wall. A part is an object
+     on a bench: it catches the light. */
+  --art-ink: #8A94A4;
+  --art-ink-hi: #C3CBD8;
+  /* Recesses. The one thing that must stay darker than everything else, or fan
+     hubs, port openings and slot interiors lose all their depth. */
+  --art-void: #04060A;
+  --art-fill: #1B2029;
+  --art-fill-2: #262C37;
+  --art-fill-3: #333A46;
+  --art-fill-4: #434B59;
+  /* Board green, close to what a real server PCB looks like under bench light. */
+  --art-pcb: #143726;
+  --art-glass: #102330;
+  --art-gold: #E0B145;
+  --art-copper: #C98A44;
+  --art-led: #6EE05A;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ light */
+
+:root[data-theme="light"] {
+  /* The page is grey so white panels read as raised objects sitting on it.
+     A white page under white cards is what made everything merge. */
+  --c-void: #EDEFF3;
+  --c-base: #DFE3E9;
+  --c-surface: #FFFFFF;
+  --c-raised: #F6F7FA;
+  --c-overlay: #FFFFFF;
+
+  --c-ink: #0B0D11;
+  --c-ink-1: #454D59;
+  --c-ink-2: #626A77;
+  --c-ink-3: #8A93A0;
+
+  /* Pure #FF5A1F fails contrast as text on white, so the accent darkens
+     while the fill colour it is used against stays the same hue. */
+  --c-acc: #D6430A;
+  --c-acc-hot: #B93707;
+  --c-acc-ink: #FFFFFF;
+
+  --c-cool: #0A7C92;
+  --c-ok: #1B7F35;
+  --c-warn: #8A5A00;
+  --c-err: #C42121;
+
+  --line: rgb(11 13 17 / 0.13);
+  --line-mid: rgb(11 13 17 / 0.21);
+  --line-hi: rgb(11 13 17 / 0.38);
+  --wash: rgb(11 13 17 / 0.05);
+  --wash-2: rgb(11 13 17 / 0.022);
+
+  --rig-shell: #D3D8E0;
+  --rig-rail: #A8B0BC;
+  --rig-node: #FFFFFF;
+  --rig-node-hot: #FFEEE4;
+  --rig-bay: #E4E8EE;
+  --rig-line: rgb(11 13 17 / 0.34);
+
+  --lift-1: 0 1px 2px rgb(11 13 17 / 0.06), 0 8px 24px -16px rgb(11 13 17 / 0.28);
+  --lift-2: 0 20px 48px -24px rgb(11 13 17 / 0.30);
+  --grid-ink: rgb(11 13 17 / 0.045);
+
+  /* Drawings stay light-on-light: the components read as machined metal
+     rather than as photo negatives of the dark versions. */
+  /* Line work has to carry the drawing on a light page. The first light palette
+     drew pale grey on pale grey and the parts all but vanished in a grid. */
+  --art-ink: #5B6674;
+  --art-ink-hi: #2C3542;
+  /* Deep recesses (fan hubs, port openings, slot interiors) need to be clearly
+     darker than the grey well the drawing sits in, or the part loses its
+     interior depth entirely. */
+  --art-void: #96A2B1;
+  --art-fill: #C4CDD8;
+  --art-fill-2: #D8DFE7;
+  --art-fill-3: #E8ECF2;
+  --art-fill-4: #F6F8FA;
+  --art-pcb: #BCD8C3;
+  --art-glass: #DCE4EC;
+  --art-gold: #B8912F;
+  --art-copper: #9A7838;
+  --art-led: #2E9E43;
+
+  color-scheme: light;
+}
+
+* {
+  border-color: var(--line);
+  min-width: 0;
+}
+
+html {
+  background: var(--color-void);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  font-variant-numeric: tabular-nums;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::selection {
+  background: var(--color-acc);
+  color: var(--color-acc-ink);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-base); }
+::-webkit-scrollbar-thumb {
+  background: var(--line-hi);
+  border: 2px solid var(--color-base);
+  border-radius: 99px;
+}
+
+@layer components {
+
+/* =============================================================
+   Type
+   ============================================================= */
+
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.94;
+  text-wrap: balance;
+}
+
+.t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.t-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.t-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+/* =============================================================
+   Structure
+   ============================================================= */
+
+.grid-field {
+  background-image:
+    linear-gradient(to right, var(--grid-ink) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-ink) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+  background-position: center center;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 78%);
+}
+
+.hatch {
+  background-image: repeating-linear-gradient(-45deg, var(--line) 0 1px, transparent 1px 7px);
+}
+
+/* =============================================================
+   Photographic hero
+
+   Two photographs of the same rack, one shot on black and one on
+   white, so the hero follows the theme instead of staying a dark
+   band on a light page.
+
+   The photograph is a background rather than an <img> because
+   only the theme knows which one applies, and that is decided by
+   a script before first paint rather than on the server. Two
+   <img> tags would both be fetched even with one hidden; a
+   background image that does not apply is never requested.
+
+   Two things about the plumbing. Everything hangs off variables
+   (--hero-veil for the wash, --hero-src for the file) so there
+   is one gradient and one background rule rather than four of
+   each. And the size rules carry a :root prefix purely to keep
+   specificity level with the theme rules: without it, the light
+   theme's full-size photograph outranked the small-screen dark
+   one and phones on light fetched the wrong file.
+   ============================================================= */
+
+.hero-band {
+  /* Dark by default, matching :root. Light overrides below. */
+  --hero-veil: 5 6 9;
+  --hero-src: url("/hero-bg.webp");
+}
+
+/*
+ * Over the dark photograph the type has to be light, whatever the page around
+ * it is doing. Both halves of the palette are restated, and that is not belt
+ * and braces: Tailwind's utilities read var(--c-*) but the hand-written rules
+ * in this file read var(--color-*), and those resolve against the theme rather
+ * than against an override further down the tree. Setting only the --c-* names
+ * left .btn-ghost pulling near-black text from the light theme.
+ */
+:root:not([data-theme="light"]) .hero-band {
+  --c-void: #050609;
+  --c-base: #0B0D12;
+  --c-surface: #14171D;
+  --c-raised: #1D212A;
+
+  --c-ink: #EDEFF2;
+  --c-ink-1: #B4BBC6;
+  --c-ink-2: #8C94A1;
+  --c-ink-3: #6B7380;
+
+  --c-acc: #FF5A1F;
+  --c-acc-hot: #FF7A45;
+  --c-acc-ink: #0B0704;
+  --c-cool: #29D3EE;
+  --c-ok: #6EE05A;
+
+  --color-void: var(--c-void);
+  --color-base: var(--c-base);
+  --color-surface: var(--c-surface);
+  --color-raised: var(--c-raised);
+  --color-ink: var(--c-ink);
+  --color-ink-1: var(--c-ink-1);
+  --color-ink-2: var(--c-ink-2);
+  --color-ink-3: var(--c-ink-3);
+  --color-acc: var(--c-acc);
+  --color-acc-hot: var(--c-acc-hot);
+  --color-acc-ink: var(--c-acc-ink);
+  --color-cool: var(--c-cool);
+  --color-ok: var(--c-ok);
+
+  --line: rgb(255 255 255 / 0.12);
+  --line-mid: rgb(255 255 255 / 0.20);
+  --line-hi: rgb(255 255 255 / 0.32);
+  --wash: rgb(255 255 255 / 0.06);
+
+  color: var(--c-ink);
+}
+
+/*
+ * On white, the page's own light palette is already right, so nothing is
+ * overridden. Only the photograph and the colour of the wash change.
+ */
+:root[data-theme="light"] .hero-band {
+  --hero-veil: 255 255 255;
+  --hero-src: url("/hero-bg-light.webp");
+}
+
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  background-image: var(--hero-src);
+  background-repeat: no-repeat;
+  background-size: cover;
+  /* The rack is on the right of the frame with the light falling away to the
+     left, which is where the type goes. Anchoring right keeps the machine
+     whole instead of cropping through it as the window narrows. */
+  background-position: 82% 50%;
+}
+
+/*
+ * The scrim, which is what makes the type legible rather than merely present.
+ *
+ * Horizontal on a wide screen, because the photograph's own empty space is on
+ * the left and the gradient only has to deepen it. On a phone there is no
+ * empty space left to use once the frame is cropped to a portrait sliver, so
+ * it becomes a vertical wash instead and the rack reads as texture behind the
+ * words rather than as a subject competing with them.
+ */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgb(var(--hero-veil) / 0.86) 0%,
+      rgb(var(--hero-veil) / 0.62) 42%,
+      rgb(var(--hero-veil) / 0.9) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgb(var(--hero-veil) / 0.5) 0%,
+      rgb(var(--hero-veil) / 0.2) 60%,
+      transparent 100%
+    );
+}
+
+/*
+ * The light theme needs far less wash, and needs it to stop sooner.
+ *
+ * On the black photograph a heavy veil reads as shadow and costs nothing. On
+ * the white one the same veil is fog: it sits over a dark subject and greys the
+ * whole machine out. Here it only has to cover the ground the type stands on,
+ * and the photograph's own white space does most of that already.
+ */
+:root[data-theme="light"] .hero-scrim {
+  background:
+    linear-gradient(to bottom, rgb(255 255 255 / 0.82) 0%, rgb(255 255 255 / 0.7) 45%, rgb(255 255 255 / 0.86) 100%),
+    linear-gradient(to right, rgb(255 255 255 / 0.8) 0%, rgb(255 255 255 / 0.5) 55%, transparent 100%);
+}
+
+/* Smaller file on small screens. Both selectors carry :root so neither theme
+   outranks the other on specificity. */
+@media (max-width: 900px) {
+  :root .hero-band {
+    --hero-src: url("/hero-bg-900.webp");
+  }
+  :root[data-theme="light"] .hero-band {
+    --hero-src: url("/hero-bg-light-900.webp");
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-photo {
+    background-position: right 50%;
+  }
+  .hero-scrim {
+    background:
+      linear-gradient(
+        to right,
+        rgb(var(--hero-veil) / 0.97) 0%,
+        rgb(var(--hero-veil) / 0.9) 34%,
+        rgb(var(--hero-veil) / 0.45) 62%,
+        transparent 88%
+      ),
+      linear-gradient(to bottom, transparent 55%, rgb(var(--hero-veil) / 0.55) 100%);
+  }
+
+  /*
+   * Wider screens crop less off the left, so the machine sits further right and
+   * the wash can stop before it reaches it. No bottom gradient at all here:
+   * that was what greyed out the power supplies along the base of the rack.
+   */
+  :root[data-theme="light"] .hero-scrim {
+    background: linear-gradient(
+      to right,
+      rgb(255 255 255 / 0.94) 0%,
+      rgb(255 255 255 / 0.82) 30%,
+      rgb(255 255 255 / 0.3) 46%,
+      transparent 58%
+    );
+  }
+}
+
+.ticked { position: relative; }
+.ticked::before,
+.ticked::after {
+  content: "";
+  position: absolute;
+  width: 9px; height: 9px;
+  border-color: var(--line-hi);
+  pointer-events: none;
+}
+.ticked::before { top: -1px; left: -1px; border-top: 1px solid; border-left: 1px solid; }
+.ticked::after  { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; }
+
+/* =============================================================
+   Controls
+   ============================================================= */
+
+.btn {
+  --btn-bg: transparent;
+  --btn-fg: var(--color-ink);
+  --btn-line: var(--line-mid);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.625rem;
+  padding-inline: 1.125rem;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-line);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s var(--ease-out-hard),
+              border-color 0.18s var(--ease-out-hard),
+              color 0.18s var(--ease-out-hard),
+              transform 0.12s var(--ease-out-hard);
+  position: relative;
+  isolation: isolate;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:focus-visible { outline: 2px solid var(--color-cool); outline-offset: 2px; }
+
+.btn-primary {
+  --btn-bg: var(--color-acc);
+  --btn-fg: var(--color-acc-ink);
+  --btn-line: var(--color-acc);
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) { --btn-bg: var(--color-acc-hot); --btn-line: var(--color-acc-hot); }
+
+.btn-ghost:hover:not(:disabled) { --btn-bg: var(--wash); --btn-line: var(--line-hi); }
+
+.btn-sm { height: 2rem; padding-inline: 0.75rem; font-size: 0.6875rem; }
+.btn-icon { width: 2rem; height: 2rem; padding: 0; }
+
+.field {
+  width: 100%;
+  height: 2.5rem;
+  padding-inline: 0.75rem;
+  background: var(--color-base);
+  border: 1px solid var(--line-mid);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+  transition: border-color 0.15s;
+}
+.field:focus { outline: none; border-color: var(--color-acc); }
+.field::placeholder { color: var(--color-ink-3); }
+
+/* =============================================================
+   Panels
+   ============================================================= */
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--line);
+}
+
+.panel-raised {
+  background: linear-gradient(180deg, var(--color-raised), var(--color-surface));
+  border: 1px solid var(--line);
+  box-shadow: var(--lift-1);
+}
+
+.panel-int {
+  background: var(--color-surface);
+  border: 1px solid var(--line);
+  transition: border-color 0.2s var(--ease-out-hard),
+              background 0.2s var(--ease-out-hard),
+              transform 0.25s var(--ease-out-hard),
+              box-shadow 0.25s var(--ease-out-hard);
+  position: relative;
+}
+.panel-int::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--color-acc);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s var(--ease-out-hard);
+}
+.panel-int:hover {
+  border-color: var(--line-mid);
+  background: var(--color-raised);
+  transform: translateY(-2px);
+  box-shadow: var(--lift-1);
+}
+.panel-int:hover::after { transform: scaleX(1); }
+
+/* =============================================================
+   Status pills
+   ============================================================= */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.1875rem 0.5rem;
+  border: 1px solid var(--line-mid);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--color-ink-1);
+}
+.pill-ok   { color: var(--color-ok);   border-color: color-mix(in srgb, var(--color-ok) 34%, transparent);   background: color-mix(in srgb, var(--color-ok) 8%, transparent); }
+.pill-warn { color: var(--color-warn); border-color: color-mix(in srgb, var(--color-warn) 34%, transparent); background: color-mix(in srgb, var(--color-warn) 8%, transparent); }
+.pill-err  { color: var(--color-err);  border-color: color-mix(in srgb, var(--color-err) 34%, transparent);  background: color-mix(in srgb, var(--color-err) 8%, transparent); }
+.pill-acc  { color: var(--color-acc);  border-color: color-mix(in srgb, var(--color-acc) 36%, transparent);  background: color-mix(in srgb, var(--color-acc) 8%, transparent); }
+.pill-cool { color: var(--color-cool); border-color: color-mix(in srgb, var(--color-cool) 32%, transparent); background: color-mix(in srgb, var(--color-cool) 8%, transparent); }
+
+/* =============================================================
+   Pseudo-3D
+   ============================================================= */
+
+/* Establishes a shared perspective for tilt children. */
+.stage { perspective: 1400px; perspective-origin: 50% 40%; }
+
+/* Follows the pointer via --rx/--ry set in JS. */
+.tilt {
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+  transition: transform 0.45s var(--ease-out-hard);
+  will-change: transform;
+}
+.tilt-fast { transition: transform 0.12s linear; }
+
+/* Layer children off the board by depth. */
+.z-1 { transform: translateZ(18px); }
+.z-2 { transform: translateZ(38px); }
+.z-3 { transform: translateZ(64px); }
+
+.sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    380px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--color-acc) 16%, transparent),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.sheen-host:hover .sheen { opacity: 1; }
+
+/* =============================================================
+   Motion
+   ============================================================= */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+.rise { animation: rise 0.7s var(--ease-out-hard) both; }
+
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+.pop { animation: pop 0.32s var(--ease-spring) both; }
+
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.live-dot {
+  width: 5px; height: 5px; border-radius: 99px;
+  background: var(--color-ok);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+  flex: none;
+}
+
+@keyframes scan {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(1100%); opacity: 0; }
+}
+.scanline {
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-cool), transparent);
+  animation: scan 5.5s linear infinite;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee-track { display: flex; width: max-content; animation: marquee 46s linear infinite; }
+.marquee-host:hover .marquee-track { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .tilt { transform: none !important; }
+}
+
+/* =============================================================
+   Utilities
+   ============================================================= */
+
+.shell { width: 100%; max-width: 88rem; margin-inline: auto; padding-inline: 1.25rem; }
+@media (min-width: 768px) { .shell { padding-inline: 2rem; } }
+
+.no-bar::-webkit-scrollbar { display: none; }
+.no-bar { scrollbar-width: none; }
+
+.clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+} /* @layer components */

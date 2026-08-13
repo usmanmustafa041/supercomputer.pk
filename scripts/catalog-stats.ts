@@ -1,5 +1,5 @@
 /** Prints catalog composition. Run: npm run catalog:stats */
-import { allProducts, kindCounts, fmtPkr } from "../src/lib/catalog";
+import { allProducts, kindCounts, fmtPkr } from "../shared/src/catalog";
 
 const all = allProducts();
 console.log(`TOTAL SKUs: ${all.length.toLocaleString()}\n`);

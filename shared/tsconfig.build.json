@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    /*
+     * CommonJS with declarations, because both consumers have to be able to
+     * read it: Nest compiles to CommonJS, and Next will take either. Emitting
+     * one format that works everywhere is less trouble than dual publishing a
+     * package that never leaves this repository.
+     */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test"]
+}
