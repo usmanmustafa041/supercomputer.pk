@@ -23,6 +23,7 @@ export interface ProductRow {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
+  image_id: number | null;
 }
 
 export interface ProductImageRow {
@@ -35,6 +36,10 @@ export interface ProductImageRow {
   width: number | null;
   height: number | null;
   alt: string | null;
+  source_url: string | null;
+  source_name: string | null;
+  source_license: string | null;
+  verified_at: Date | null;
   position: number;
 }
 

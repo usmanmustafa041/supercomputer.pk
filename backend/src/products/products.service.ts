@@ -76,6 +76,7 @@ export class ProductsService {
     return {
       ...specs,
       id: row.sku,
+      ...(row.image_id ? { imageId: row.image_id } : {}),
       slug: row.slug,
       kind: row.kind,
       brand: row.brand,

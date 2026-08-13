@@ -57,6 +57,10 @@ export interface ProductImage {
   height: number | null;
   alt: string | null;
   position: number;
+  source_url?: string | null;
+  source_name?: string | null;
+  source_license?: string | null;
+  verified_at?: string | null;
 }
 
 export interface PresetPick {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PartArt from "@/components/art/PartArt";
 import { CONDITION_LABEL, type Product } from "@supercomputers/shared";
+import { imageSrc } from "@/lib/api/media";
 
 /** Two or three numbers that matter for this kind, for the card face. */
 export function keyStats(p: Product): Array<[string, string]> {
@@ -117,10 +118,14 @@ export default function ProductCard({ p, compact = false }: { p: Product; compac
   return (
     <Link href={`/product/${p.slug}`} className="panel-int ticked group flex flex-col">
       <div className="relative aspect-[200/152] overflow-hidden border-b border-[var(--line)] bg-[var(--color-base)]">
-        <PartArt
-          product={p}
-          className="w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
-        />
+        {p.imageId ? (
+          // Verified images are served through the private-object-store API.
+          // Products without one keep the deterministic technical artwork.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageSrc(p.imageId)} alt={`${p.brand} ${p.model}`} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.04]" />
+        ) : (
+          <PartArt product={p} className="w-full h-full transition-transform duration-500 group-hover:scale-[1.04]" />
+        )}
         <div className="absolute top-2 left-2">
           <span className={`pill ${p.condition !== "new" ? "pill-acc" : ""}`}>{CONDITION_LABEL[p.condition]}</span>
         </div>

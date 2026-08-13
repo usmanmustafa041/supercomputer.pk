@@ -22,6 +22,9 @@ export interface Photo {
   alt: string | null;
   width: number | null;
   height: number | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  source_license?: string | null;
 }
 
 export default function PhotoGallery({ photos, subject }: { photos: Photo[]; subject: string }) {
@@ -112,6 +115,12 @@ export default function PhotoGallery({ photos, subject }: { photos: Photo[]; sub
       )}
 
       {current.alt && <p className="text-[12.5px] text-ink-2 mt-2.5 leading-relaxed">{current.alt}</p>}
+      {current.source_name && (
+        <p className="text-[11px] text-ink-3 mt-1.5">
+          Image source: {current.source_url ? <a href={current.source_url} target="_blank" rel="noreferrer" className="underline">{current.source_name}</a> : current.source_name}
+          {current.source_license ? ` · ${current.source_license}` : ""}
+        </p>
+      )}
 
       {full && (
         <div

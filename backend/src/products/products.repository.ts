@@ -14,9 +14,10 @@ import type { Page, ProductImageRow, ProductRow } from "./product.types";
 const COLUMNS = `id, sku, slug, kind, brand, model, mpn, family, condition, segment,
   price_pkr::float8 AS price_pkr, price_on_request, stock_qty, lead_days, indent_only,
   warranty_months, release_year, search_key, highlights, tags, specs, is_active,
-  created_at, updated_at`;
+  created_at, updated_at,
+  (SELECT pi.id FROM product_images pi WHERE pi.sku = products.sku AND pi.verified_at IS NOT NULL ORDER BY pi.position, pi.id LIMIT 1) AS image_id`;
 
-const IMAGE_COLUMNS = `id, sku, object_key, original_name, mime, bytes, width, height, alt, position`;
+const IMAGE_COLUMNS = `id, sku, object_key, original_name, mime, bytes, width, height, alt, source_url, source_name, source_license, verified_at, position`;
 
 export interface ProductFilter {
   q?: string;
@@ -234,14 +235,19 @@ export class ProductsRepository {
     bytes: number;
     width: number | null;
     height: number | null;
+    source_url?: string | null;
+    source_name?: string | null;
+    source_license?: string | null;
+    verified_at?: Date | null;
   }): Promise<void> {
     await this.db.query(
       `INSERT INTO product_images
-         (sku, object_key, original_name, mime, bytes, width, height, position)
+         (sku, object_key, original_name, mime, bytes, width, height, source_url, source_name, source_license, verified_at, position)
        VALUES ($1, $2, $3, $4, $5, $6, $7,
+               $8, $9, $10, $11,
                COALESCE((SELECT max(position) + 1 FROM product_images WHERE sku = $1), 0))
        ON CONFLICT (sku, object_key) DO NOTHING`,
-      [img.sku, img.object_key, img.original_name, img.mime, img.bytes, img.width, img.height],
+      [img.sku, img.object_key, img.original_name, img.mime, img.bytes, img.width, img.height, img.source_url ?? null, img.source_name ?? null, img.source_license ?? null, img.verified_at ?? null],
     );
   }
 

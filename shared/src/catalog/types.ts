@@ -108,6 +108,8 @@ export interface Money {
 
 interface Base {
   id: string;
+  /** First verified photograph, when one has been imported. */
+  imageId?: number;
   slug: string;
   kind: Kind;
   brand: string;
