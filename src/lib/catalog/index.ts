@@ -139,11 +139,16 @@ export interface SearchResult {
 }
 
 export function search(q: Query): SearchResult {
+  return searchProducts(allProducts(), q);
+}
+
+/** Run the catalog query surface over an explicit product source. */
+export function searchProducts(source: Product[], q: Query): SearchResult {
   const tokens = (q.text ?? "").toLowerCase().split(/\s+/).filter(Boolean);
   const perPage = q.perPage ?? 36;
   const page = Math.max(1, q.page ?? 1);
 
-  let items = allProducts().filter((p) => {
+  let items = source.filter((p) => {
     if (q.kind?.length && !q.kind.includes(p.kind)) return false;
     if (q.condition?.length && !q.condition.includes(p.condition)) return false;
     if (q.segment?.length && !q.segment.includes(p.segment)) return false;

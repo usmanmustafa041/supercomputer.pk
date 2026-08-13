@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getById, getByKind, search, type Kind, type Product } from "@/lib/catalog";
+import { searchProducts, type Kind, type Product } from "@/lib/catalog";
+import { publicProducts } from "@/lib/db/catalog";
 import { suggestChassis, type Target } from "@/lib/catalog/fit";
 
 export const runtime = "nodejs";
@@ -17,6 +18,9 @@ export const runtime = "nodejs";
  */
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
+  const products = await publicProducts();
+  const byId = new Map(products.map((product) => [product.id.toLowerCase(), product]));
+  const getById = (id: string) => byId.get(id.toLowerCase());
 
   /**
    * ?chassisFor=rack&ids=… , re-home a build into a chassis that suits a new
@@ -35,7 +39,11 @@ export async function GET(req: Request) {
       })
       .filter((l): l is { product: Product; qty: number } => l !== null);
 
-    const hit = suggestChassis(lines, chassisFor);
+    const hit = suggestChassis(
+      lines,
+      chassisFor,
+      products.filter((p): p is Extract<Product, { kind: "chassis" }> => p.kind === "chassis"),
+    );
     return NextResponse.json({ chassis: hit?.chassis ?? null, relaxed: hit?.relaxed ?? [] });
   }
 
@@ -60,7 +68,7 @@ export async function GET(req: Request) {
 
     const byFamily = new Map<string, Product>();
     for (const kind of ["chassis", "motherboard", "cpu", "cooler", "memory", "gpu", "storage", "psu", "nic", "switch", "optic", "rack", "pdu", "ups"] as Kind[]) {
-      for (const p of getByKind(kind)) {
+      for (const p of products.filter((candidate) => candidate.kind === kind)) {
         if (!wanted.has(p.family)) continue;
         const hint = wanted.get(p.family);
         if (hint && !p.model.toLowerCase().includes(hint.toLowerCase())) continue;
@@ -80,7 +88,7 @@ export async function GET(req: Request) {
   const forTarget = sp.get("for");
   const rackOnly = forTarget === "rack" || forTarget === "cluster";
 
-  const res = search({
+  const res = searchProducts(products, {
     kind: sp.get("kind") ? [sp.get("kind") as Kind] : undefined,
     text: sp.get("q") ?? undefined,
     page: Number(sp.get("page") ?? 1),

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import QuoteForm, { QuoteLines } from "./QuoteForm";
-import { getById } from "@/lib/catalog";
 import type { Product } from "@/lib/catalog";
+import { publicProductById } from "@/lib/db/catalog";
 import type { Target } from "@/lib/compat/types";
 
 export const metadata: Metadata = {
@@ -23,14 +23,14 @@ export default async function QuotePage({
     typeof sp.t === "string" && ["desk", "rack", "cluster"].includes(sp.t) ? (sp.t as Target) : "desk";
 
   // Resolve whatever the configurator or a product page passed through.
-  const lines: Array<{ product: Product; qty: number }> = [...b.split(","), sys]
-    .filter(Boolean)
-    .map((token) => {
+  const resolved = await Promise.all([...b.split(","), sys].filter(Boolean).map(async (token) => {
       const [id, qty] = token.split("*");
-      const product = getById(id);
+      const product = await publicProductById(id);
       return product ? { product, qty: Math.max(1, Number(qty ?? 1)) } : null;
-    })
-    .filter((l): l is { product: Product; qty: number } => l !== null);
+    }));
+  const lines: Array<{ product: Product; qty: number }> = resolved.filter(
+    (l): l is { product: Product; qty: number } => l !== null,
+  );
 
   const editHref = `/configure?t=${target}${
     lines.length ? `&b=${lines.map((l) => (l.qty > 1 ? `${l.product.id}*${l.qty}` : l.product.id)).join(",")}` : ""

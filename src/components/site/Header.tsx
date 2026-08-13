@@ -12,6 +12,7 @@ export default function Header() {
   const path = usePathname();
   // The admin portal brings its own header. Two stacked headers help nobody.
   const inAdmin = path.startsWith("/admin");
+  const isHome = path === "/";
   const [open, setOpen] = useState(false);
   const [stuck, setStuck] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -40,13 +41,16 @@ export default function Header() {
   if (inAdmin) return null;
 
   return (
+    <>
     <header
-      className={`sticky top-0 z-50 transition-colors duration-300 ${
-        stuck ? "bg-void/92 backdrop-blur-xl border-b" : "bg-transparent border-b border-transparent"
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        stuck || !isHome
+          ? "bg-void/92 backdrop-blur-xl border-b border-[var(--line)]"
+          : "bg-gradient-to-b from-black/75 to-transparent border-b border-transparent"
       }`}
     >
       {/* status strip, real, useful, not a marketing bar */}
-      <div className="hidden md:block border-b border-[var(--line)] bg-base/60">
+      <div className={`${isHome ? "hidden" : "hidden md:block"} border-b border-[var(--line)] bg-base/60`}>
         <div className="shell flex items-center justify-between h-8 text-[11px] t-data text-ink-2">
           <div className="flex items-center gap-5">
             <span className="flex items-center gap-1.5">
@@ -67,11 +71,24 @@ export default function Header() {
       <div className="shell flex items-center gap-3 h-16">
         <Link href="/" className="flex items-center gap-2.5 shrink-0 group" aria-label={`${BRAND.name} home`}>
           <Mark className="h-7 w-7 text-acc transition-transform duration-300 group-hover:rotate-90" />
-          <span className="t-display text-[19px] tracking-[-0.02em] leading-none">{BRAND.name}</span>
+          <span className="leading-none">
+            <strong className="block t-display text-[15px] md:text-[17px] tracking-[0.16em]">{BRAND.name}</strong>
+            {isHome && <small className="block mt-1 t-data text-[7px] tracking-[0.34em] text-ink-2">WORKSTATIONS</small>}
+          </span>
         </Link>
 
         <nav className="hidden lg:flex items-center ml-6" aria-label="Primary">
-          {NAV.map((n) => {
+          {(isHome
+            ? [
+                { href: "/systems", label: "Workstations" },
+                { href: "/systems?category=ai-rig", label: "AI Systems" },
+                { href: "/catalog?kind=desktop", label: "Gaming" },
+                { href: "/configure", label: "Configure" },
+                { href: "/systems?category=server", label: "Enterprise" },
+                { href: "/quote", label: "Support" },
+              ]
+            : NAV
+          ).map((n) => {
             const active = path === n.href || path.startsWith(n.href + "/");
             return (
               <Link
@@ -92,25 +109,17 @@ export default function Header() {
           })}
         </nav>
 
-        <form action="/catalog" className="hidden md:flex ml-auto relative w-56 lg:w-72">
-          <input
-            ref={searchRef}
-            name="q"
-            type="search"
-            placeholder="Search parts"
-            aria-label="Search catalog"
-            className="field h-9 pr-9 text-[13px]"
-          />
-          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 t-data text-[10px] text-ink-3 border border-[var(--line-mid)] px-1.5 py-0.5 pointer-events-none">
-            /
-          </kbd>
+        <form action="/catalog" className={`${isHome ? "hidden" : "hidden md:flex w-56 lg:w-72"} ml-auto relative`}>
+          <input ref={searchRef} name="q" type="search" placeholder="Search parts" aria-label="Search catalog" className="field h-9 pr-9 text-[13px]" />
+          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 t-data text-[10px] text-ink-3 border border-[var(--line-mid)] px-1.5 py-0.5 pointer-events-none">/</kbd>
         </form>
 
         <div className="hidden lg:flex items-center gap-3">
+          {isHome && <span className="mx-2 h-5 w-5 rounded-full border border-white/70 relative after:absolute after:left-1/2 after:top-1/2 after:h-2 after:w-2 after:-translate-x-1/2 after:-translate-y-1/2 after:rounded-full after:border after:border-white/70" aria-hidden />}
           <AccountLink className="text-[13px] text-ink-1 hover:text-ink transition-colors" />
           <ThemeToggle />
-          <Link href="/configure" className="btn btn-primary btn-sm">
-            Configure
+          <Link href="/configure" className="btn btn-sm btn-primary">
+            {isHome ? "Build your PC" : "Configure"}
           </Link>
         </div>
 
@@ -155,5 +164,9 @@ export default function Header() {
         </nav>
       )}
     </header>
+    {/* Fixed navigation is intentionally overlaid on the hero. Inner pages
+        receive a spacer matching the 64px mobile / 96px desktop header. */}
+    {!isHome && <div className="h-16 md:h-24 shrink-0" aria-hidden="true" />}
+    </>
   );
 }

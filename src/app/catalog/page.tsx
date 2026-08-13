@@ -2,16 +2,29 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import ProductCard from "@/components/catalog/ProductCard";
 import {
-  CONDITION_LABEL, KIND_LABEL, catalogSize, search,
+  CONDITION_LABEL, KIND_LABEL,
   type Condition, type Kind, type Query, type Segment,
 } from "@/lib/catalog";
-
-export const metadata: Metadata = {
-  title: "Parts",
-  description: "Every part we sell, with filters for category, condition, brand and budget.",
-};
+import { publicProducts, searchPublicProducts } from "@/lib/db/catalog";
 
 type SP = Record<string, string | string[] | undefined>;
+
+const CATEGORY_DESCRIPTION: Partial<Record<Kind, string>> = {
+  gpu: "Professional GPUs and AI accelerators for inference, training, rendering and engineering workloads.",
+  cpu: "Server and workstation processors selected by core count, memory channels, PCIe capacity and sustained power.",
+  memory: "ECC workstation and server memory, including tested refurbished modules and matched kits.",
+  storage: "NVMe, enterprise SSD and capacity storage for workstations, servers and data pipelines.",
+  system: "Complete AI workstations and servers, configured, burn-in tested and supported in Pakistan.",
+};
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
+  const sp = await searchParams;
+  const kinds = asArray(sp.kind) as Kind[];
+  const query = typeof sp.q === "string" ? sp.q.trim() : "";
+  const title = kinds.length === 1 ? `${KIND_LABEL[kinds[0]]} in Pakistan` : query ? `Search results for “${query}”` : "Computer parts and workstation hardware";
+  const description = kinds.length === 1 ? CATEGORY_DESCRIPTION[kinds[0]] ?? `Browse ${KIND_LABEL[kinds[0]].toLowerCase()} with stock, condition and lead-time details.` : "Browse workstation, server and AI hardware with compatibility data, condition grading and Pakistan stock information.";
+  return { title, description, alternates: { canonical: kinds.length === 1 ? `/catalog?kind=${kinds[0]}` : "/catalog" }, robots: query ? { index: false, follow: true } : undefined };
+}
 
 const asArray = (v: string | string[] | undefined): string[] =>
   v == null ? [] : Array.isArray(v) ? v.flatMap((s) => s.split(",")) : v.split(",").filter(Boolean);
@@ -111,7 +124,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     perPage: 36,
   };
 
-  const res = search(q);
+  const products = await publicProducts();
+  const res = await searchPublicProducts(q);
   const activeCount =
     q.kind!.length + q.condition!.length + q.segment!.length + q.brand!.length + q.tags!.length + (q.inStockOnly ? 1 : 0);
 
@@ -122,9 +136,10 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     <div className="shell py-9 md:py-12">
       <header className="mb-8">
         <p className="t-eyebrow mb-2.5">
-          {res.total.toLocaleString()} of {catalogSize().toLocaleString()} parts
+          {res.total.toLocaleString()} of {products.length.toLocaleString()} parts
         </p>
         <h1 className="t-display text-[clamp(1.9rem,4.4vw,3.1rem)]">{heading}</h1>
+        {q.kind?.length === 1 && <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-ink-1">{CATEGORY_DESCRIPTION[q.kind[0]] ?? `Compare ${KIND_LABEL[q.kind[0]].toLowerCase()} by specification, availability and condition.`}</p>}
       </header>
 
       <div className="grid lg:grid-cols-[15rem_1fr] gap-8">
@@ -202,6 +217,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               <Link href="/catalog" className="btn btn-ghost mt-6">
                 Reset filters
               </Link>
+              <Link href="/quote" className="btn btn-primary mt-6 ml-2">Request help finding a part</Link>
             </div>
           ) : (
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

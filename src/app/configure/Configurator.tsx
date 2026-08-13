@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PartArt from "@/components/art/PartArt";
 import PartPicker from "./PartPicker";
 import { Telemetry } from "./BuildViewport";
 import { PRESETS, SLOTS, slotsFor, type Slot } from "./slots";
-import { CONDITION_LABEL, type Kind, type Product } from "@/lib/catalog";
+import { CONDITION_LABEL, fmtPkrShort, type Kind, type Product } from "@/lib/catalog";
 import { checkBuild } from "@/lib/compat/engine";
 import { TARGET_LABEL, type BuildLine, type Finding, type Target } from "@/lib/compat/types";
 
@@ -74,6 +74,14 @@ export default function Configurator({
 
   /** Slot whose conflict explanation is open. At most one at a time. */
   const [openConflict, setOpenConflict] = useState<Kind | null>(null);
+  const [desktopViewport, setDesktopViewport] = useState(true);
+  const [historyAvailability, setHistoryAvailability] = useState({ undo: false, redo: false });
+  const [shareStatus, setShareStatus] = useState("");
+  const [savedBuilds, setSavedBuilds] = useState<Array<{ name: string; url: string; savedAt: string }>>([]);
+  const undoStack = useRef<Array<{ lines: BuildLine[]; target: Target }>>([]);
+  const redoStack = useRef<Array<{ lines: BuildLine[]; target: Target }>>([]);
+  const previousBuild = useRef({ lines: initialLines, target: initialTarget });
+  const applyingHistory = useRef(false);
 
   /**
    * Anything else you touch closes the explanation.
@@ -102,7 +110,64 @@ export default function Configurator({
   }, [capHit]);
 
   useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setDesktopViewport(query.matches);
+    update();
+    query.addEventListener("change", update);
+    queueMicrotask(() => {
+      try { setSavedBuilds(JSON.parse(localStorage.getItem("sc_saved_builds") ?? "[]")); } catch { setSavedBuilds([]); }
+    });
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const previous = previousBuild.current;
+    const changed = encodeBuild(previous.lines, previous.target) !== encodeBuild(lines, target);
+    if (changed && !applyingHistory.current) {
+      undoStack.current.push(previous);
+      if (undoStack.current.length > 40) undoStack.current.shift();
+      redoStack.current = [];
+    }
+    applyingHistory.current = false;
+    previousBuild.current = { lines, target };
+    queueMicrotask(() => setHistoryAvailability({ undo: undoStack.current.length > 0, redo: redoStack.current.length > 0 }));
     window.history.replaceState(null, "", `/configure${encodeBuild(lines, target)}`);
+  }, [lines, target]);
+
+  const travelHistory = useCallback((direction: "undo" | "redo") => {
+    const from = direction === "undo" ? undoStack.current : redoStack.current;
+    const to = direction === "undo" ? redoStack.current : undoStack.current;
+    const snapshot = from.pop();
+    if (!snapshot) return;
+    to.push(previousBuild.current);
+    applyingHistory.current = true;
+    setLines(snapshot.lines);
+    setTarget(snapshot.target);
+    setHistoryAvailability({ undo: undoStack.current.length > 0, redo: redoStack.current.length > 0 });
+  }, []);
+
+  const saveBuild = useCallback(() => {
+    const saved = {
+      name: `Workstation build ${new Date().toLocaleDateString("en-PK")}`,
+      url: `/configure${encodeBuild(lines, target)}`,
+      savedAt: new Date().toISOString(),
+    };
+    setSavedBuilds((current) => {
+      const next = [saved, ...current.filter((item) => item.url !== saved.url)].slice(0, 10);
+      localStorage.setItem("sc_saved_builds", JSON.stringify(next));
+      return next;
+    });
+    setShareStatus("Saved");
+  }, [lines, target]);
+
+  const shareBuild = useCallback(async () => {
+    const url = new URL(`/configure${encodeBuild(lines, target)}`, window.location.origin).toString();
+    try {
+      const nativeShare = typeof navigator.share === "function";
+      if (nativeShare) await navigator.share({ title: "Supercomputers.pk workstation build", url });
+      else await navigator.clipboard.writeText(url);
+      setShareStatus(nativeShare ? "Shared" : "Link copied");
+    } catch { setShareStatus(""); }
   }, [lines, target]);
 
   const report = useMemo(() => checkBuild({ lines, target }), [lines, target]);
@@ -266,6 +331,8 @@ export default function Configurator({
     const c = lines.find((l) => l.product.kind === "chassis");
     return c ? errorIds.includes(c.product.id) : false;
   }, [lines, errorIds]);
+  const coreSlots = slots.filter((slot) => slot.core);
+  const nextRequired = coreSlots.find((slot) => !(byKind.get(slot.kind)?.length));
 
   return (
     <div className="shell py-4 md:py-9 pb-28 lg:pb-9 overflow-x-clip">
@@ -299,6 +366,27 @@ export default function Configurator({
           </div>
         </div>
       </header>
+
+      <section className="panel mb-4 p-3 flex flex-wrap items-center gap-2" aria-label="Build workflow">
+        <span className="t-label mr-1">Build steps</span>
+        <button type="button" onClick={() => setPicking(nextRequired ?? coreSlots[0] ?? null)} className="btn btn-sm btn-primary">
+          {nextRequired ? `Next: choose ${nextRequired.label}` : "Core parts complete"}
+        </button>
+        <span className="t-data text-[10px] text-ink-3 mr-auto">
+          1 Workload → 2 Core parts → 3 Expansion → 4 Validate
+        </span>
+        <button type="button" onClick={() => travelHistory("undo")} disabled={!historyAvailability.undo} className="btn btn-ghost btn-sm">Undo</button>
+        <button type="button" onClick={() => travelHistory("redo")} disabled={!historyAvailability.redo} className="btn btn-ghost btn-sm">Redo</button>
+        <button type="button" onClick={saveBuild} disabled={!hasLines} className="btn btn-ghost btn-sm">Save configuration</button>
+        <button type="button" onClick={shareBuild} disabled={!hasLines} className="btn btn-ghost btn-sm">Share configuration</button>
+        {shareStatus && <span className="pill pill-ok">{shareStatus}</span>}
+        {savedBuilds.length > 0 && (
+          <select className="field h-8 w-auto text-[11px]" defaultValue="" onChange={(event) => { if (event.target.value) window.location.href = event.target.value; }} aria-label="Open a saved build">
+            <option value="">Saved builds ({savedBuilds.length})</option>
+            {savedBuilds.map((build) => <option key={`${build.url}-${build.savedAt}`} value={build.url}>{build.name}</option>)}
+          </select>
+        )}
+      </section>
 
       {capHit && (
         <div className="panel border-l-2 border-l-warn px-4 py-2.5 mb-4 flex items-center gap-3 pop">
@@ -375,7 +463,7 @@ export default function Configurator({
               </div>
             </div>
             <div className="h-[calc(100dvh-15rem)] lg:h-[52vh] xl:h-[62vh] min-h-[18rem]">
-              <Stage
+              {(desktopViewport || pane === "view") && <Stage
                 lines={lines}
                 target={target}
                 dragKind={dragKind}
@@ -383,7 +471,7 @@ export default function Configurator({
                 onDragKind={setDragKind}
                 errorIds={errorIds}
                 chassisConflict={chassisConflict}
-              />
+              />}
             </div>
           </div>
 
@@ -530,7 +618,7 @@ export default function Configurator({
                                   {l.product.brand} {l.product.model}
                                 </Link>
                                 <span className="t-data text-[10px] text-ink-3">
-                                  {CONDITION_LABEL[l.product.condition]}
+                                  {CONDITION_LABEL[l.product.condition]} · {l.product.avail.inHouse > 0 ? `${l.product.avail.inHouse} in stock` : `${l.product.avail.leadDays}d lead`}
                                 </span>
                               </div>
                               <div className="flex flex-col items-end gap-1 shrink-0">
@@ -591,17 +679,17 @@ export default function Configurator({
               </section>
             )}
 
-            {/* Quote-only: no running total. The configuration itself is the ask. */}
             <div className="p-4 border-t border-[var(--line)] space-y-2">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="t-label">Configuration</span>
-                <span key={lines.length} className="t-data text-[13px] tabular-nums pop">
-                  {lines.length} line{lines.length === 1 ? "" : "s"}
+                <span key={lines.length} className="t-data text-[13px] tabular-nums pop text-acc">
+                  {summary.totalPkr > 0 ? `Est. ${fmtPkrShort(summary.totalPkr)}` : `${lines.length} lines`}
                 </span>
               </div>
               <p className="t-data text-[10px] text-ink-3 leading-relaxed">
-                We price each build individually. Send it and we reply within one working day with a full price, delivered and cleared.
+                Indicative catalog total; final availability, taxes and delivered price are confirmed in your quote.
                 {summary.sourcedLines > 0 && ` ${summary.sourcedLines} line${summary.sourcedLines > 1 ? "s" : ""} to source.`}
+                {summary.maxLeadDays > 0 && ` Up to ${summary.maxLeadDays} working days lead time.`}
               </p>
               <Link
                 href={`/quote${encodeBuild(lines, target)}`}
@@ -640,6 +728,8 @@ export default function Configurator({
                 {findings.map((f, i) => {
                   const st = SEV_STYLE[f.severity];
                   const open = openFinding === i;
+                  const affectedKind = lines.find((line) => f.refs.includes(line.product.id))?.product.kind;
+                  const replacement = affectedKind ? slots.find((slot) => slot.kind === affectedKind) : undefined;
                   return (
                     <li
                       key={`${f.rule}-${i}`}
@@ -661,6 +751,11 @@ export default function Configurator({
                       {open && (
                         <div className="px-3.5 pb-3 pl-8 pop">
                           <p className="text-[12px] text-ink-1 leading-relaxed">{f.detail}</p>
+                          {f.severity === "error" && replacement && (
+                            <button type="button" onClick={() => setPicking(replacement)} className="btn btn-ghost btn-sm mt-2">
+                              Show compatible replacements
+                            </button>
+                          )}
                           {f.fix && <p className="text-[12px] text-cool mt-1.5 leading-relaxed">→ {f.fix}</p>}
                         </div>
                       )}
@@ -741,9 +836,15 @@ export default function Configurator({
           kind={picking.kind}
           hint={picking.hint}
           forTarget={target}
+          currentLines={lines}
+          replaceExisting={picking.maxPerNode === 1}
           onClose={() => setPicking(null)}
           onPick={(p) => {
-            add(p, picking.defaultQty);
+            if (picking.maxPerNode === 1) {
+              setLines((current) => [...current.filter((line) => line.product.kind !== p.kind), { product: p, qty: 1 }]);
+            } else {
+              add(p, picking.defaultQty);
+            }
             setPicking(null);
           }}
         />

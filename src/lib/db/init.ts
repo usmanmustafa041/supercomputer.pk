@@ -12,16 +12,15 @@
  */
 
 import "server-only";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { pool, query, scalar } from "./client";
-import { hashPassword } from "@/lib/auth/password";
+import { one, pool, query, scalar } from "./client";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { runMigrations } from "./migrate";
 
 /** Columns the products table holds properly; everything else is a spec. */
 const REAL_COLUMNS = new Set([
   "id", "slug", "kind", "brand", "model", "mpn", "family", "condition",
   "segment", "price", "avail", "warrantyMonths", "releaseYear",
-  "searchKey", "highlights", "tags",
+  "searchKey", "highlights", "tags", "productMedia",
 ]);
 
 let ready: Promise<void> | null = null;
@@ -33,17 +32,44 @@ export function ensureReady(): Promise<void> {
 }
 
 async function setup(): Promise<void> {
-  const schema = await readFile(join(process.cwd(), "src/lib/db/schema.sql"), "utf-8");
-  await pool.query(schema);
+  validateProductionConfiguration();
+  await runMigrations();
 
   await ensureAdmin();
   await seedCatalog();
 }
 
+function validateProductionConfiguration(): void {
+  if (process.env.NODE_ENV !== "production") return;
+  const password = process.env.ADMIN_PASSWORD ?? "";
+  const dbPassword = process.env.POSTGRES_PASSWORD ?? "";
+  const encryptionKey = process.env.AUTH_ENCRYPTION_KEY ?? "";
+  if (!process.env.ADMIN_EMAIL) throw new Error("ADMIN_EMAIL is required in production.");
+  if (password.length < 14 || password.toLowerCase() === "changeme") {
+    throw new Error("ADMIN_PASSWORD must be at least 14 characters and cannot use the default.");
+  }
+  if (!process.env.DATABASE_URL && (!dbPassword || dbPassword === "supercomputers")) {
+    throw new Error("Set DATABASE_URL or a non-default POSTGRES_PASSWORD in production.");
+  }
+  if (encryptionKey.length < 32 || encryptionKey === "development-only-change-this-key") {
+    throw new Error("AUTH_ENCRYPTION_KEY must be a unique value of at least 32 characters in production.");
+  }
+  if (!process.env.CRON_SECRET || process.env.CRON_SECRET.length < 24 || process.env.CRON_SECRET === "development-maintenance-secret") {
+    throw new Error("CRON_SECRET must be a unique value of at least 24 characters in production.");
+  }
+  if (!process.env.APP_URL?.startsWith("https://")) throw new Error("APP_URL must be an HTTPS URL in production.");
+  if (!process.env.EMAIL_WEBHOOK_URL) throw new Error("EMAIL_WEBHOOK_URL is required for production password resets.");
+}
+
 async function ensureAdmin(): Promise<void> {
   const email = (process.env.ADMIN_EMAIL ?? "admin@supercomputers.pk").toLowerCase();
-  const existing = await scalar<number>("SELECT id FROM users WHERE email = $1", [email]);
-  if (existing) return;
+  const existing = await one<{ id: number; password_hash: string }>("SELECT id, password_hash FROM users WHERE email = $1", [email]);
+  if (existing) {
+    if (process.env.NODE_ENV === "production" && await verifyPassword("changeme", existing.password_hash)) {
+      throw new Error("The existing administrator still uses the default password. Reset it before production startup.");
+    }
+    return;
+  }
 
   const password = process.env.ADMIN_PASSWORD ?? "changeme";
   await query(

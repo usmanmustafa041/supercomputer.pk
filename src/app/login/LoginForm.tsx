@@ -17,10 +17,10 @@ function Submit({ label }: { label: string }) {
 }
 
 function Problem({ state }: { state: FormState }) {
-  if (!state?.error) return null;
+  if (!state?.error && !state?.ok) return null;
   return (
-    <p role="alert" className="text-[13px] text-warn border border-[color-mix(in_srgb,var(--color-warn)_34%,transparent)] bg-[color-mix(in_srgb,var(--color-warn)_8%,transparent)] px-3 py-2">
-      {state.error}
+    <p role="status" className="text-[13px] text-ink-1 border border-[var(--line-mid)] px-3 py-2">
+      {state.error ?? state.ok}
     </p>
   );
 }
@@ -39,7 +39,14 @@ export function SignInForm({ next }: { next?: string }) {
         <span className="t-label">Password</span>
         <input name="password" type="password" autoComplete="current-password" required className="field" />
       </label>
+      {state?.requiresTwoFactor && (
+        <label className="grid gap-1.5">
+          <span className="t-label">Authenticator code</span>
+          <input name="totp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required className="field" />
+        </label>
+      )}
       <Submit label="Sign in" />
+      <Link href="/forgot-password" className="text-[13px] text-acc hover:underline text-center">Forgot your password?</Link>
       <p className="text-[13px] text-ink-2 text-center mt-1">
         No account yet?{" "}
         <Link href="/register" className="text-acc hover:underline">
@@ -54,6 +61,7 @@ export function SignUpForm({ next }: { next?: string }) {
   const [state, action] = useActionState<FormState, FormData>(signUp, undefined);
   return (
     <form action={action} className="grid gap-3">
+      <input name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <Problem state={state} />
       <label className="grid gap-1.5">
@@ -81,10 +89,10 @@ export function SignUpForm({ next }: { next?: string }) {
           type="password"
           autoComplete="new-password"
           required
-          minLength={8}
+          minLength={10}
           className="field"
         />
-        <span className="text-[12px] text-ink-3">At least 8 characters.</span>
+        <span className="text-[12px] text-ink-3">At least 10 characters.</span>
       </label>
       <Submit label="Create account" />
       <p className="text-[13px] text-ink-2 text-center mt-1">

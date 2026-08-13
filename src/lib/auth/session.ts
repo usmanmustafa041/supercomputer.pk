@@ -38,6 +38,7 @@ export async function createSession(userId: number): Promise<string> {
   // Opportunistic tidy-up. Cheap, indexed, and saves needing a cron job for
   // the one housekeeping task this app has.
   await query("DELETE FROM sessions WHERE expires_at < now()");
+  await query("DELETE FROM password_reset_tokens WHERE expires_at < now() OR used_at IS NOT NULL");
   return token;
 }
 
@@ -53,7 +54,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
   await ensureReady();
 
   const row = await one<UserRow>(
-    `SELECT u.id, u.email, u.full_name, u.organisation, u.role
+    `SELECT u.id, u.email, u.full_name, u.organisation, u.role, u.totp_enabled
        FROM sessions s
        JOIN users u ON u.id = s.user_id
       WHERE s.token = $1
@@ -69,6 +70,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     role: row.role,
     fullName: row.full_name,
     organisation: row.organisation,
+    totpEnabled: Boolean(row.totp_enabled),
   };
 });
 

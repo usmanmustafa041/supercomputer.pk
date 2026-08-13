@@ -4,6 +4,7 @@ import { BRAND } from "@/lib/brand";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
 import SiteOnly from "@/components/site/SiteOnly";
+import PrivacyAnalytics from "@/components/site/PrivacyAnalytics";
 import { THEME_SCRIPT } from "@/components/site/ThemeToggle";
 import "./globals.css";
 
@@ -18,12 +19,21 @@ const display = Archivo({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
   title: {
     default: `${BRAND.name}, ${BRAND.tagline}`,
     template: `%s · ${BRAND.name}`,
   },
   description: BRAND.strapline,
   applicationName: BRAND.name,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: BRAND.name,
+    title: `${BRAND.name}, ${BRAND.tagline}`,
+    description: BRAND.strapline,
+    images: ["/opengraph-image"],
+  },
 };
 
 export const viewport: Viewport = {
@@ -53,6 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteOnly>
           <Footer />
         </SiteOnly>
+        <PrivacyAnalytics />
       </body>
     </html>
   );

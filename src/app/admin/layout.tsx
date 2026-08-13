@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (session.role !== "admin") redirect("/account");
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="admin-root min-h-screen bg-base">
       <AdminNav email={session.email} signOut={signOut} />
       {/* Bottom padding clears the phone tab bar. */}
       <div className="pb-20 md:pb-0">{children}</div>

@@ -4,31 +4,53 @@ import type { Metadata } from "next";
 import PartArt from "@/components/art/PartArt";
 import SpecTable from "@/components/catalog/SpecTable";
 import ProductCard from "@/components/catalog/ProductCard";
+import ProductMediaGallery from "@/components/catalog/ProductMediaGallery";
 import {
-  CONDITION_LABEL, CONDITION_NOTE, KIND_LABEL, getBySlug, getFamily, search,
+  CONDITION_LABEL, CONDITION_NOTE, KIND_LABEL,
 } from "@/lib/catalog";
+import { publicProductBySlug, publicProductFamily, searchPublicProducts } from "@/lib/db/catalog";
 import { BRAND } from "@/lib/brand";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const p = getBySlug(slug);
+  const p = await publicProductBySlug(slug);
   if (!p) return { title: "Not found" };
+  const description = `${p.highlights[0] ?? `${p.brand} ${p.model}`}. ${CONDITION_LABEL[p.condition]}, ${p.warrantyMonths} month warranty.`;
+  const image = p.productMedia?.find((item) => item.role === "main" && item.type === "image")?.url;
   return {
-    title: `${p.brand} ${p.model}`,
-    description: `${p.highlights[0]} ${CONDITION_LABEL[p.condition]}, ${p.warrantyMonths} month warranty, quoted per order.`,
+    title: `${p.brand} ${p.model} ${KIND_LABEL[p.kind]} in Pakistan`,
+    description,
+    alternates: { canonical: `/product/${p.slug}` },
+    openGraph: { title: `${p.brand} ${p.model}`, description, type: "website", images: image ? [image] : ["/opengraph-image"] },
   };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const p = getBySlug(slug);
+  const p = await publicProductBySlug(slug);
   if (!p) notFound();
 
-  const siblings = getFamily(p.family).filter((s) => s.id !== p.id);
-  const related = search({ kind: [p.kind], tags: p.tags.slice(0, 1), perPage: 5 }).items.filter((r) => r.family !== p.family);
+  const siblings = (await publicProductFamily(p.family)).filter((s) => s.id !== p.id);
+  const related = (await searchPublicProducts({ kind: [p.kind], tags: p.tags.slice(0, 1), perPage: 5 })).items.filter((r) => r.family !== p.family);
+  const baseUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const productSchema = {
+    "@context": "https://schema.org", "@type": "Product", sku: p.id, mpn: p.mpn,
+    name: `${p.brand} ${p.model}`, brand: { "@type": "Brand", name: p.brand },
+    description: p.highlights.join(" "), category: KIND_LABEL[p.kind],
+    image: p.productMedia?.filter((item) => item.type === "image").map((item) => item.url),
+    itemCondition: p.condition === "new" ? "https://schema.org/NewCondition" : "https://schema.org/RefurbishedCondition",
+    url: `${baseUrl}/product/${p.slug}`,
+  };
+  const breadcrumbSchema = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Catalog", item: `${baseUrl}/catalog` },
+    { "@type": "ListItem", position: 2, name: KIND_LABEL[p.kind], item: `${baseUrl}/catalog?kind=${p.kind}` },
+    { "@type": "ListItem", position: 3, name: `${p.brand} ${p.model}`, item: `${baseUrl}/product/${p.slug}` },
+  ] };
 
   return (
     <div className="shell py-8 md:py-11">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema).replace(/</g, "\\u003c") }} />
       <nav className="flex flex-wrap items-center gap-2 text-[11.5px] t-data text-ink-3 mb-7" aria-label="Breadcrumb">
         <Link href="/catalog" className="hover:text-ink transition-colors">Catalog</Link>
         <span aria-hidden>/</span>
@@ -55,15 +77,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </p>
           </header>
 
-          <div className="panel border border-[var(--line)] mb-7">
-            <PartArt product={p} className="w-full aspect-[200/152] max-h-[26rem]" />
-          </div>
-
-          <p className="text-[12px] text-ink-3 mb-9 leading-relaxed">
-            Illustration is a scale technical drawing generated from this SKU&apos;s own dimensions and layout,
-            not a photograph. Slot width, card length, connector count and bay layout are drawn to the figures in
-            the table below.
-          </p>
+          {p.productMedia?.length ? (
+            <ProductMediaGallery media={p.productMedia} />
+          ) : (
+            <>
+              <div className="panel border border-[var(--line)] mb-7">
+                <PartArt product={p} className="w-full aspect-[200/152] max-h-[26rem]" />
+              </div>
+              <p className="text-[12px] text-ink-3 mb-9 leading-relaxed">
+                Technical illustration generated from this SKU&apos;s dimensions. Ask for current stock-unit and condition photographs before ordering.
+              </p>
+            </>
+          )}
 
           {/* --------------------------------------------------- highlights */}
           <section className="mb-9">

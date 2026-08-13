@@ -1,20 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PartArt from "@/components/art/PartArt";
 import { keyStats } from "@/components/catalog/ProductCard";
 import { CONDITION_LABEL, KIND_LABEL, type Kind, type Product } from "@/lib/catalog";
+import { checkBuild } from "@/lib/compat/engine";
+import type { BuildLine, Target } from "@/lib/compat/types";
 
 interface Props {
   kind: Kind;
   hint: string;
   /** Deployment target, so chassis options can be filtered to what fits it. */
   forTarget: string;
+  currentLines: BuildLine[];
+  replaceExisting: boolean;
   onPick: (p: Product) => void;
   onClose: () => void;
 }
 
-export default function PartPicker({ kind, hint, forTarget, onPick, onClose }: Props) {
+export default function PartPicker({ kind, hint, forTarget, currentLines, replaceExisting, onPick, onClose }: Props) {
   const [q, setQ] = useState("");
   // Quote-only storefront: capability is the only sort, price never appears.
   const sort = "perf" as const;
@@ -25,6 +29,13 @@ export default function PartPicker({ kind, hint, forTarget, onPick, onClose }: P
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
+  const rankedItems = useMemo(() => items.map((product) => {
+    const base = replaceExisting ? currentLines.filter((line) => line.product.kind !== kind) : currentLines;
+    const report = checkBuild({ lines: [...base, { product, qty: 1 }], target: forTarget as Target });
+    const score = report.errors * 10000 + report.warns * 100 + (product.avail.inHouse > 0 ? 0 : 20) + product.avail.leadDays;
+    return { product, report, score };
+  }).sort((a, b) => a.score - b.score), [items, currentLines, replaceExisting, kind, forTarget]);
+  const recommendedId = rankedItems[0]?.product.id;
 
   // Filter changes reset pagination. Doing this in the handlers rather than in
   // an effect avoids a render pass that fetches page N of the old result set.
@@ -130,11 +141,11 @@ export default function PartPicker({ kind, hint, forTarget, onPick, onClose }: P
             </p>
           ) : (
             <ul className="grid gap-2.5 sm:grid-cols-2">
-              {items.map((p) => (
+              {rankedItems.map(({ product: p, report }) => (
                 <li key={p.id}>
                   <button
                     onClick={() => onPick(p)}
-                    className="panel-int w-full text-left flex gap-3 p-2.5 group"
+                    className={`panel-int w-full text-left flex gap-3 p-2.5 group ${p.id === recommendedId ? "border-acc" : ""}`}
                   >
                     <div className="w-20 shrink-0 border border-[var(--line)] bg-[var(--color-base)] self-start">
                       <PartArt product={p} className="w-full h-full" bare />
@@ -155,6 +166,7 @@ export default function PartPicker({ kind, hint, forTarget, onPick, onClose }: P
                         ))}
                       </dl>
                       <div className="flex items-center gap-1.5 mt-1.5">
+                        {p.id === recommendedId && <span className="pill pill-acc">Recommended</span>}
                         <span className={`pill ${p.condition !== "new" ? "pill-acc" : ""}`}>
                           {CONDITION_LABEL[p.condition]}
                         </span>
@@ -164,6 +176,11 @@ export default function PartPicker({ kind, hint, forTarget, onPick, onClose }: P
                           <span className="pill">{p.avail.leadDays}d</span>
                         )}
                       </div>
+                      {p.id === recommendedId && (
+                        <p className="text-[10.5px] text-ink-2 mt-1.5 leading-relaxed">
+                          Why this part? {report.errors === 0 ? "It passes the current compatibility checks" : `It has the fewest conflicts (${report.errors})`}{p.avail.inHouse > 0 ? " and is in stock." : ` with a ${p.avail.leadDays}-day lead time.`}
+                        </p>
+                      )}
                     </div>
                   </button>
                 </li>

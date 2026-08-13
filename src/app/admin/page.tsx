@@ -8,9 +8,10 @@ export const metadata = { title: "Overview" };
 
 function Figure({ n, label, sub }: { n: number; label: string; sub?: string }) {
   return (
-    <div className="panel p-4 sm:p-5">
+    <div className="admin-stat">
+      <div className="admin-stat-mark" />
       <div className="t-display text-2xl sm:text-3xl tabular-nums">{n.toLocaleString("en-GB")}</div>
-      <div className="text-[13px] mt-1 leading-snug">{label}</div>
+      <div className="text-[11px] uppercase tracking-[0.12em] mt-2 leading-snug text-ink-1">{label}</div>
       {sub && <div className="text-[12px] text-ink-3 mt-0.5">{sub}</div>}
     </div>
   );
@@ -27,10 +28,13 @@ export default async function AdminHome() {
   const busiest = top[0]?.[1] ?? 1;
 
   return (
-    <div className="shell py-6 sm:py-8">
-      <h1 className="t-display text-xl sm:text-2xl mb-5">Overview</h1>
+    <div className="shell admin-screen py-6 sm:py-8">
+      <div className="admin-heading">
+        <div><p className="admin-kicker">Command centre / live operations</p><h1>Dashboard</h1></div>
+        <div className="admin-live"><i /> Systems operational</div>
+      </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
         <Figure
           n={s.productsActive}
           label="Products listed"
@@ -43,6 +47,7 @@ export default async function AdminHome() {
           sub={`${s.quotesTotal.toLocaleString("en-GB")} all time`}
         />
         <Figure n={s.usersTotal} label="Accounts" />
+        <Figure n={s.invoicesOutstanding} label="Open invoices" sub={`${s.invoicesTotal} generated`} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

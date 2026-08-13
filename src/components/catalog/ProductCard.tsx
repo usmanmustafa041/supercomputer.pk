@@ -113,14 +113,19 @@ export function StockPill({ p }: { p: Product }) {
 
 export default function ProductCard({ p, compact = false }: { p: Product; compact?: boolean }) {
   const stats = keyStats(p);
+  const photograph = p.productMedia?.find((item) => item.role === "main" && item.type === "image")
+    ?? p.productMedia?.find((item) => item.type === "image");
 
   return (
     <Link href={`/product/${p.slug}`} className="panel-int ticked group flex flex-col">
       <div className="relative aspect-[200/152] overflow-hidden border-b border-[var(--line)] bg-[var(--color-base)]">
-        <PartArt
-          product={p}
-          className="w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
-        />
+        {photograph ? (
+          // Object-storage hosts are admin-configurable, so a fixed Next Image allowlist is not appropriate here.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photograph.url} alt={photograph.alt} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.04]" loading="lazy" />
+        ) : (
+          <PartArt product={p} className="w-full h-full transition-transform duration-500 group-hover:scale-[1.04]" />
+        )}
         <div className="absolute top-2 left-2">
           <span className={`pill ${p.condition !== "new" ? "pill-acc" : ""}`}>{CONDITION_LABEL[p.condition]}</span>
         </div>

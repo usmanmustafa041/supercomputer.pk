@@ -133,9 +133,9 @@ export interface Rehome {
  * constraints one at a time and reports what it gave up, rather than
  * returning nothing and leaving the user stuck.
  */
-export function suggestChassis(lines: Line[], target: Target): Rehome | null {
+export function suggestChassis(lines: Line[], target: Target, chassisPool?: Chassis[]): Rehome | null {
   const need = chassisNeeds(lines);
-  const pool = getByKind("chassis").filter((c) => suitsTarget(c, target));
+  const pool = (chassisPool ?? getByKind("chassis")).filter((c) => suitsTarget(c, target));
   if (!pool.length) return null;
 
   /** Smallest sufficient enclosure, with stock as the tiebreak. */

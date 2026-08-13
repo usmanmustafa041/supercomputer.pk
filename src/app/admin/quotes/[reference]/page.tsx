@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getQuote } from "@/lib/db/quotes";
+import { getQuote, quoteRevisions } from "@/lib/db/quotes";
 import { QUOTE_STATUS_LABEL, type QuoteStatus } from "@/lib/db/types";
-import { setQuoteStatus } from "../../actions";
+import { emailQuote, makeInvoiceFromQuote, reserveQuote, reviseQuote, saveQuoteCommercial, setQuoteStatus } from "../../actions";
 
 export const metadata = { title: "Request" };
 
@@ -24,9 +24,12 @@ export default async function QuoteDetail({ params }: { params: Promise<{ refere
   const { reference } = await params;
   const q = await getQuote(decodeURIComponent(reference));
   if (!q) notFound();
+  const revisions = await quoteRevisions(q.reference);
 
   const findings = q.findings as Finding[];
   const blocking = findings.filter((f) => f.severity === "error");
+  const taxable = Math.max(0, Number(q.subtotal_pkr || 0) - Number(q.discount_pkr || 0));
+  const total = taxable + taxable * (Number(q.tax_rate || 0) / 100);
 
   return (
     <div className="shell py-6 sm:py-8 max-w-5xl">
@@ -79,6 +82,17 @@ export default async function QuoteDetail({ params }: { params: Promise<{ refere
             </label>
             <button className="btn btn-primary btn-sm">Save</button>
           </form>
+          <div className="grid gap-2 mt-4 pt-4 border-t border-[var(--line)]">
+            <a href={`/api/admin/quotes/${q.reference}/pdf`} className="btn btn-sm">Download quote PDF</a>
+            <form action={emailQuote}><input type="hidden" name="reference" value={q.reference}/><button className="btn btn-sm w-full">Email PDF to customer</button></form>
+            {q.phone && <a className="btn btn-sm" target="_blank" rel="noreferrer" href={`https://wa.me/${q.phone.replace(/\D/g,"")}?text=${encodeURIComponent(`Your quotation ${q.reference}: ${process.env.APP_URL ?? "http://localhost:3000"}/api/admin/quotes/${q.reference}/pdf`)}`}>Share on WhatsApp</a>}
+            <form action={reserveQuote}><input type="hidden" name="reference" value={q.reference}/><button className="btn btn-sm w-full" disabled={!q.lines.length}>Reserve stock</button></form>
+            <form action={makeInvoiceFromQuote}>
+              <input type="hidden" name="reference" value={q.reference} />
+              <button className="btn btn-primary btn-sm w-full" disabled={!q.lines.length}>Create invoice</button>
+            </form>
+          </div>
+          <form action={reviseQuote} className="grid gap-2 mt-4 pt-4 border-t border-[var(--line)]"><input type="hidden" name="reference" value={q.reference}/><input name="revision_note" className="field" placeholder="Reason for revision"/><button className="btn btn-sm">Create revision {q.revision_number+1}</button></form>
         </aside>
 
         <div className="grid gap-5 min-w-0">
@@ -93,6 +107,8 @@ export default async function QuoteDetail({ params }: { params: Promise<{ refere
             <Row label="Setup" value={q.target} />
             <Row label="Workload" value={q.workloads.join(", ") || null} />
             <Row label="Notes" value={q.notes} />
+            <Row label="Sent" value={q.sent_at ? new Date(q.sent_at).toLocaleString("en-GB") : "Not sent"} />
+            <Row label="Opened" value={q.opened_at ? new Date(q.opened_at).toLocaleString("en-GB") : "Not recorded"} />
             <div className="flex flex-wrap gap-2 mt-4">
               <a href={`mailto:${q.contact_email}?subject=Your quote ${q.reference}`} className="btn btn-sm">
                 Reply by email
@@ -104,6 +120,30 @@ export default async function QuoteDetail({ params }: { params: Promise<{ refere
               )}
             </div>
           </section>
+          {revisions.length>0&&<section className="panel p-4 sm:p-5"><h2 className="t-label mb-3">Revision history</h2>{revisions.map(r=><div key={r.revision_number} className="py-2 border-b border-[var(--line)] text-[12px]"><strong>Revision {r.revision_number}</strong> · {new Date(r.created_at).toLocaleString("en-GB")} · {r.actor_email}<span className="block text-ink-2">{r.note}</span></div>)}</section>}
+
+          <form action={saveQuoteCommercial} className="admin-panel">
+            <input type="hidden" name="reference" value={q.reference} />
+            <div className="flex items-end justify-between gap-4">
+              <div><p className="admin-kicker">Commercial terms</p><h2>Price this quotation</h2></div>
+              <strong className="t-data text-acc">PKR {Math.round(total).toLocaleString("en-US")}</strong>
+            </div>
+            <div className="grid gap-2 mt-4">
+              {q.lines.map((line, index) => (
+                <div key={`${line.sku}-${index}`} className="admin-line-item">
+                  <span><strong>{line.brand} {line.model}</strong><small>{line.sku} · Qty {line.qty}</small></span>
+                  <label><span>Unit price PKR</span><input name={`line_price_${index}`} type="number" min="0" step="1" defaultValue={Number(line.unit_price_pkr || 0)} className="field text-right" /></label>
+                </div>
+              ))}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3 mt-4">
+              <label><span>Tax rate %</span><input name="tax_rate" type="number" min="0" step="0.01" defaultValue={Number(q.tax_rate || 0)} className="field" /></label>
+              <label><span>Discount PKR</span><input name="discount_pkr" type="number" min="0" step="1" defaultValue={Number(q.discount_pkr || 0)} className="field" /></label>
+              <label><span>Valid until</span><input name="valid_until" type="date" defaultValue={q.valid_until ? String(q.valid_until).slice(0, 10) : ""} className="field" /></label>
+              <label><span>Payment terms</span><input name="payment_terms" defaultValue={q.payment_terms ?? "50% advance, balance before dispatch"} className="field" /></label>
+            </div>
+            <button className="btn btn-primary mt-4">Save and mark quoted</button>
+          </form>
 
           <section className="panel p-4 sm:p-5">
             <h2 className="t-label mb-3">What they configured</h2>

@@ -1,0 +1,5 @@
+import "server-only";import{ensureReady}from"./init";import{one,query}from"./client";
+export interface DocumentTemplateRow{id:number;template_type:"quote"|"invoice";name:string;config:Record<string,unknown>;is_default:boolean;updated_at:Date}
+export async function templates(){await ensureReady();return query<DocumentTemplateRow>("SELECT * FROM document_templates ORDER BY template_type,is_default DESC,name");}
+export async function defaultTemplate(type:"quote"|"invoice"){await ensureReady();return one<DocumentTemplateRow>("SELECT * FROM document_templates WHERE template_type=$1 AND is_default ORDER BY updated_at DESC LIMIT 1",[type]);}
+export async function upsertTemplate(type:"quote"|"invoice",name:string,config:Record<string,unknown>){await ensureReady();await query("UPDATE document_templates SET is_default=false WHERE template_type=$1",[type]);await query(`INSERT INTO document_templates(template_type,name,config,is_default) VALUES($1,$2,$3,true)`,[type,name,JSON.stringify(config)]);}

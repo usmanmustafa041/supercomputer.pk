@@ -106,6 +106,16 @@ export interface Money {
   onRequest?: boolean;
 }
 
+export type ProductMediaRole = "main" | "gallery" | "serial" | "condition" | "packaging" | "inspection";
+
+/** Only object-storage URLs and presentation metadata are stored in Postgres. */
+export interface ProductMedia {
+  type: "image" | "video";
+  role: ProductMediaRole;
+  url: string;
+  alt: string;
+}
+
 interface Base {
   id: string;
   slug: string;
@@ -133,6 +143,7 @@ interface Base {
    * for matching against inbound supplier stock lists.
    */
   searchKey: string;
+  productMedia?: ProductMedia[];
 }
 
 /* ---------------------------------------------------------------- compute */

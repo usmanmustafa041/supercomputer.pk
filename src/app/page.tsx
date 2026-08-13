@@ -1,100 +1,25 @@
 import Link from "next/link";
 import ProductCard from "@/components/catalog/ProductCard";
 import PartArt from "@/components/art/PartArt";
-import HeroRig from "@/components/home/HeroRig";
+import HeroFrameScroll from "@/components/home/HeroFrameScroll";
 import LiveCheck from "@/components/home/LiveCheck";
-import { catalogSize, getByKind, kindCounts, search } from "@/lib/catalog";
+import { publicKindCounts, publicProductsByKind, searchPublicProducts } from "@/lib/db/catalog";
 
-export default function Home() {
-  const total = catalogSize();
-  const counts = kindCounts();
-  const systems = getByKind("system")
+export default async function Home() {
+  const counts = await publicKindCounts();
+  const systems = (await publicProductsByKind("system"))
     .filter((s) => s.condition === "new")
     .sort((a, b) => b.bf16Tflops - a.bf16Tflops || b.coresTotal - a.coresTotal)
     .slice(0, 3);
-  const inStock = search({ inStockOnly: true, sort: "perf", perPage: 4 }).items;
-  const heldLines = search({ inStockOnly: true, perPage: 1 }).total;
-
-  // Ticker content: real catalog numbers, not invented marketing ones.
-  const ticker = [
-    `${total.toLocaleString()} parts listed`,
-    "50 compatibility checks",
-    "6 condition grades",
-    `${heldLines.toLocaleString()} items in stock`,
-    "Built for 230V and generators",
-    "Quotes within one working day",
-    "Every system run for 72 hours before it ships",
-    "Lahore · Karachi · Islamabad",
-  ];
+  const inStock = (await searchPublicProducts({ inStockOnly: true, sort: "perf", perPage: 4 })).items;
 
   return (
     <>
       {/* ================================================================ hero */}
-      <section className="relative border-b border-[var(--line)] overflow-hidden">
-        <div className="absolute inset-0 grid-field pointer-events-none" aria-hidden />
-        <div
-          className="absolute -top-52 left-1/4 w-[52rem] h-[42rem] pointer-events-none opacity-[0.18]"
-          style={{
-            background: "radial-gradient(ellipse at center, var(--color-acc) 0%, transparent 62%)",
-          }}
-          aria-hidden
-        />
-
-        <div className="shell relative py-14 md:py-20 grid lg:grid-cols-[1fr_auto] gap-12 lg:gap-16 items-center">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2.5 mb-6 rise">
-              <span className="live-dot" />
-              <span className="t-eyebrow">Lahore stock live</span>
-            </div>
-
-            <h1 className="t-display text-[clamp(2.8rem,8vw,6.2rem)] rise" style={{ animationDelay: "60ms" }}>
-              Compute that
-              <br />
-              <span className="text-acc">actually fits.</span>
-            </h1>
-
-            <p
-              className="mt-6 text-[16px] md:text-[18px] leading-relaxed text-ink-1 max-w-lg rise"
-              style={{ animationDelay: "120ms" }}
-            >
-              Refurbished servers, GPU machines and AI workstations. Put the parts together here and we
-              check that they fit, power up and stay cool before you pay for anything.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3 rise" style={{ animationDelay: "180ms" }}>
-              <Link href="/configure" className="btn btn-primary">
-                Start configuring
-              </Link>
-              <Link href="/catalog" className="btn btn-ghost">
-                {total.toLocaleString()} parts
-              </Link>
-            </div>
-          </div>
-
-          <div className="w-full lg:w-[30rem] rise" style={{ animationDelay: "240ms" }}>
-            <HeroRig />
-          </div>
-        </div>
-
-        {/* ticker */}
-        <div className="border-t border-[var(--line)] py-2.5 overflow-hidden marquee-host">
-          <div className="marquee-track">
-            {[0, 1].map((dup) => (
-              <div key={dup} className="flex shrink-0" aria-hidden={dup === 1}>
-                {ticker.map((t) => (
-                  <span key={t} className="flex items-center gap-6 px-6 t-data text-[11px] text-ink-2 whitespace-nowrap">
-                    {t}
-                    <span className="w-1 h-1 bg-acc" />
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HeroFrameScroll />
 
       {/* =========================================================== categories */}
-      <section className="border-b border-[var(--line)]">
+      <section id="catalog-start" className="border-b border-[var(--line)] scroll-mt-16">
         <div className="shell py-12 md:py-16">
           <div className="flex items-end justify-between gap-4 mb-7">
             <h2 className="t-display text-[clamp(1.6rem,3.4vw,2.4rem)]">Everything we sell</h2>

@@ -9,7 +9,12 @@ import { BRAND } from "@/lib/brand";
 const LINKS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/inventory", label: "Inventory" },
+  { href: "/admin/customers", label: "Customers" },
   { href: "/admin/quotes", label: "Requests" },
+  { href: "/admin/invoices", label: "Invoices" },
+  { href: "/admin/templates", label: "PDF" },
+  { href: "/admin/audit", label: "Audit" },
 ] as const;
 
 function isActive(path: string, href: string) {
@@ -108,7 +113,7 @@ export default function AdminNav({
           Fixed height, because the sticky save bar on the product form sits
           directly above it and has to know how tall it is. */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 grid grid-cols-3 h-14 border-t border-[var(--line)] bg-base/95 backdrop-blur-xl"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 grid grid-cols-8 h-14 border-t border-[var(--line)] bg-base/95 backdrop-blur-xl"
         aria-label="Admin sections"
       >
         {LINKS.map((l) => {

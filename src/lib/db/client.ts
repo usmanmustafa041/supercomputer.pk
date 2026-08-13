@@ -39,7 +39,12 @@ if (process.env.NODE_ENV !== "production") g.__scPool = pool;
 
 /** Every row the query returned. */
 export async function query<T extends QueryResultRow>(text: string, params: unknown[] = []): Promise<T[]> {
+  const started = performance.now();
   const res = await pool.query<T>(text, params);
+  const durationMs = performance.now() - started;
+  if (durationMs >= Number(process.env.SLOW_QUERY_MS ?? 500)) {
+    console.warn(JSON.stringify({ level: "warn", event: "slow_query", durationMs: Math.round(durationMs), query: text.replace(/\s+/g, " ").slice(0, 240) }));
+  }
   return res.rows;
 }
 

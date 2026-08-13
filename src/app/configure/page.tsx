@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Configurator from "./Configurator";
-import { getById } from "@/lib/catalog";
 import type { Kind } from "@/lib/catalog";
+import { publicProductById, publicProductsByKind } from "@/lib/db/catalog";
 import { suggestChassis, suitsTarget } from "@/lib/catalog/fit";
 import { SLOTS } from "./slots";
 import type { BuildLine, Target } from "@/lib/compat/types";
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Configurator",
   description:
     "Build a workstation, rack node or cluster and have every socket, lane, power, thermal and rack constraint checked as you go.",
+  alternates: { canonical: "/configure" },
 };
 
 export default async function ConfigurePage({
@@ -32,12 +33,9 @@ export default async function ConfigurePage({
    * quietly drew one board while the list claimed twelve.
    */
   const seen = new Map<Kind, number>();
-  let initialLines: BuildLine[] = b
-    .split(",")
-    .filter(Boolean)
-    .map((token) => {
+  const resolved = await Promise.all(b.split(",").filter(Boolean).map(async (token) => {
       const [id, qty] = token.split("*");
-      const product = getById(id);
+      const product = await publicProductById(id);
       if (!product) return null;
       const cap = SLOTS.find((s) => s.kind === product.kind)?.maxPerNode ?? 99;
       const used = seen.get(product.kind) ?? 0;
@@ -47,8 +45,8 @@ export default async function ConfigurePage({
       const granted = Math.min(want, room);
       seen.set(product.kind, used + granted);
       return { product, qty: granted };
-    })
-    .filter((l): l is BuildLine => l !== null);
+    }));
+  let initialLines: BuildLine[] = resolved.filter((l): l is BuildLine => l !== null);
 
   /**
    * Re-home on load too, not only when the target buttons are clicked. A
@@ -57,7 +55,7 @@ export default async function ConfigurePage({
    */
   const chassisLine = initialLines.find((l) => l.product.kind === "chassis");
   if (chassisLine && chassisLine.product.kind === "chassis" && !suitsTarget(chassisLine.product, t)) {
-    const hit = suggestChassis(initialLines, t);
+    const hit = suggestChassis(initialLines, t, await publicProductsByKind("chassis"));
     if (hit) {
       initialLines = initialLines.map((l) =>
         l.product.id === chassisLine.product.id ? { product: hit.chassis, qty: 1 } : l

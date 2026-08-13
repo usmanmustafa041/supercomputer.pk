@@ -12,7 +12,7 @@ import type { Page, ProductRow } from "./types";
 
 const COLUMNS = `id, sku, slug, kind, brand, model, mpn, family, condition, segment,
   price_pkr::float8 AS price_pkr, price_on_request, stock_qty, lead_days, indent_only,
-  warranty_months, release_year, search_key, highlights, tags, specs, is_active,
+  warranty_months, release_year, search_key, highlights, tags, media, specs, is_active,
   created_at, updated_at`;
 
 export interface ProductFilter {
@@ -94,6 +94,7 @@ export type ProductInput = {
   search_key: string;
   highlights: string[];
   tags: string[];
+  media: import("@/lib/catalog/types").ProductMedia[];
   specs: Record<string, unknown>;
   is_active: boolean;
 };
@@ -104,14 +105,14 @@ export async function createProduct(p: ProductInput): Promise<ProductRow> {
     `INSERT INTO products
        (sku, slug, kind, brand, model, mpn, family, condition, segment, price_pkr,
         price_on_request, stock_qty, lead_days, indent_only, warranty_months,
-        release_year, search_key, highlights, tags, specs, is_active)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+        release_year, search_key, highlights, tags, media, specs, is_active)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
      RETURNING ${COLUMNS}`,
     [
       p.sku, p.slug, p.kind, p.brand, p.model, p.mpn, p.family, p.condition, p.segment,
       p.price_pkr, p.price_on_request, p.stock_qty, p.lead_days, p.indent_only,
       p.warranty_months, p.release_year, p.search_key,
-      JSON.stringify(p.highlights), JSON.stringify(p.tags), JSON.stringify(p.specs), p.is_active,
+      JSON.stringify(p.highlights), JSON.stringify(p.tags), JSON.stringify(p.media), JSON.stringify(p.specs), p.is_active,
     ],
   );
   return rows[0];
@@ -123,7 +124,7 @@ export async function updateProduct(sku: string, patch: Partial<ProductInput>): 
 
   const sets: string[] = [];
   const params: unknown[] = [];
-  const json = new Set(["highlights", "tags", "specs"]);
+  const json = new Set(["highlights", "tags", "media", "specs"]);
 
   for (const [key, value] of Object.entries(patch)) {
     if (value === undefined || key === "sku") continue;

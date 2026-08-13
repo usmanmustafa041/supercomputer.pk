@@ -1,0 +1,5 @@
+import { query } from "@/lib/db/client";
+import { sendEmail } from "@/lib/email";
+
+export const runtime="nodejs";
+export async function POST(request:Request){if(request.headers.get("authorization")!==`Bearer ${process.env.CRON_SECRET}`)return Response.json({error:"Unauthorized"},{status:401});const rows=await query<{reference:string;contact_name:string;created_at:Date}>(`SELECT reference,contact_name,created_at FROM quotes WHERE status IN ('new','reviewing','in_review') AND created_at<now()-interval '1 day' AND (last_reminded_at IS NULL OR last_reminded_at<now()-interval '1 day') ORDER BY created_at LIMIT 100`);const to=process.env.SALES_NOTIFICATION_EMAIL??process.env.ADMIN_EMAIL;if(rows.length&&to){await sendEmail(to,`${rows.length} quote requests need attention`,rows.map(r=>`${r.reference} · ${r.contact_name} · ${new Date(r.created_at).toLocaleString("en-GB")}`).join("\n"));await query("UPDATE quotes SET last_reminded_at=now() WHERE reference=ANY($1)",[rows.map(r=>r.reference)]);}return Response.json({reminded:rows.length});}

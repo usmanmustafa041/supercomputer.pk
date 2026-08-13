@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { quotesForUser } from "@/lib/db/quotes";
 import { getSession } from "@/lib/auth/session";
-import { signOut } from "@/lib/auth/actions";
+import { disableTwoFactor, signOut } from "@/lib/auth/actions";
+import TwoFactorPanel from "./TwoFactorPanel";
 import { QUOTE_STATUS_LABEL, type QuoteRow } from "@/lib/db/types";
 
 export const metadata: Metadata = { title: "Your account" };
@@ -85,6 +86,11 @@ export default async function AccountPage() {
           ))}
         </ul>
       )}
+
+      <section className="mt-10 max-w-xl">
+        <h2 className="t-label mb-3">Account security</h2>
+        <TwoFactorPanel enabled={session.totpEnabled} disableAction={disableTwoFactor} />
+      </section>
     </div>
   );
 }

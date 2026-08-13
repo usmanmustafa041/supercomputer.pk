@@ -33,6 +33,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Read at runtime to create the tables, so it has to be in the image. The
 # bundler only traces imported code and would not have noticed it.
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db/schema.sql ./src/lib/db/schema.sql
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db/migrations ./src/lib/db/migrations
 
 USER nextjs
 EXPOSE 3000

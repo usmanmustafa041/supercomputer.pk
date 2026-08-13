@@ -17,8 +17,17 @@ import type { NextRequest } from "next/server";
  * to proxy.ts; same thing, different name.)
  */
 export function proxy(request: NextRequest) {
+  const correlationId = request.headers.get("x-correlation-id") ?? crypto.randomUUID();
+  console.info(JSON.stringify({ level: "info", event: "request", correlationId, method: request.method, path: request.nextUrl.pathname }));
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-correlation-id", correlationId);
   const signedIn = request.cookies.has("sc_session");
-  if (signedIn) return NextResponse.next();
+  const protectedPath = request.nextUrl.pathname.startsWith("/admin") || request.nextUrl.pathname.startsWith("/account");
+  if (!protectedPath || signedIn) {
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    response.headers.set("x-correlation-id", correlationId);
+    return response;
+  }
 
   const url = new URL("/login", request.url);
   url.searchParams.set("next", request.nextUrl.pathname);
@@ -26,5 +35,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/account/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|hero-frames|hero-scroll.mp4).*)"],
 };

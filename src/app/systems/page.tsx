@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import PartArt from "@/components/art/PartArt";
-import { getByKind } from "@/lib/catalog";
+import { publicProductsByKind } from "@/lib/db/catalog";
 
 export const metadata: Metadata = {
   title: "Systems",
   description:
     "AI workstations, GPU servers, clusters and storage machines, built and tested before they reach you.",
+  alternates: { canonical: "/systems" },
 };
 
 const CATEGORIES: Array<[string, string, string]> = [
@@ -25,8 +26,9 @@ export default async function SystemsPage({
 }) {
   const sp = await searchParams;
   const filter = typeof sp.category === "string" ? sp.category : null;
+  const compare = sp.compare === "1";
 
-  const all = getByKind("system").sort((a, b) => a.price.pkr - b.price.pkr);
+  const all = (await publicProductsByKind("system")).sort((a, b) => a.price.pkr - b.price.pkr);
   const shown = filter ? all.filter((s) => s.category === filter) : all;
 
   return (
@@ -60,6 +62,9 @@ export default async function SystemsPage({
             </Link>
           );
         })}
+        <Link href={compare ? (filter ? `/systems?category=${filter}` : "/systems") : `/systems?${filter ? `category=${filter}&` : ""}compare=1`} className={`btn btn-sm ml-auto ${compare ? "btn-primary" : "btn-ghost"}`}>
+          {compare ? "Back to systems" : "Compare systems"}
+        </Link>
       </nav>
 
       {filter && (
@@ -68,7 +73,29 @@ export default async function SystemsPage({
         </p>
       )}
 
-      <div className="space-y-px bg-[var(--line)] border border-[var(--line)]">
+      {compare && (
+        <div className="overflow-x-auto mb-8 border border-[var(--line)]">
+          <table className="w-full min-w-[760px] text-left">
+            <thead><tr className="bg-[var(--color-raised)]"><th className="p-3 t-label">Specification</th>{shown.slice(0, 6).map((system) => <th key={system.id} className="p-3 text-[13px]">{system.model}</th>)}</tr></thead>
+            <tbody className="divide-y divide-[var(--line)]">
+              {[
+                ["Processors", (system: typeof shown[number]) => system.cpuModel],
+                ["Accelerators", (system: typeof shown[number]) => system.gpuModel ? `${system.gpuCount} × ${system.gpuModel}` : "CPU only"],
+                ["Cores", (system: typeof shown[number]) => String(system.coresTotal)],
+                ["Memory", (system: typeof shown[number]) => `${system.memGb} GB ${system.memGen.toUpperCase()}`],
+                ["Storage", (system: typeof shown[number]) => system.storageSummary],
+                ["Peak power", (system: typeof shown[number]) => `${(system.peakPowerW / 1000).toFixed(1)} kW`],
+                ["Lead time", (system: typeof shown[number]) => `${system.avail.leadDays} working days`],
+              ].map(([label, value]) => (
+                <tr key={label as string}><th className="p-3 t-data text-[10px] text-ink-3 uppercase">{label as string}</th>{shown.slice(0, 6).map((system) => <td key={system.id} className="p-3 text-[12px] text-ink-1">{(value as (system: typeof shown[number]) => string)(system)}</td>)}</tr>
+              ))}
+              <tr><th className="p-3" />{shown.slice(0, 6).map((system) => <td key={system.id} className="p-3"><Link href={`/quote?sys=${system.id}`} className="btn btn-primary btn-sm">Request quote</Link></td>)}</tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {!compare && <div className="space-y-px bg-[var(--line)] border border-[var(--line)]">
         {shown.map((s) => (
           <article key={s.id} className="bg-[var(--color-surface)] p-5 md:p-7 grid md:grid-cols-[13rem_1fr_auto] gap-6">
             <div className="border border-[var(--line)] bg-[var(--color-base)] self-start">
@@ -140,7 +167,7 @@ export default async function SystemsPage({
             </div>
           </article>
         ))}
-      </div>
+      </div>}
 
       <section className="mt-12 border border-[var(--line)] p-7 md:p-10 hatch">
         <div className="max-w-2xl">

@@ -45,6 +45,15 @@ services:
       # The administrator created on the first boot of an empty database.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@supercomputers.pk}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      AUTH_ENCRYPTION_KEY: ${AUTH_ENCRYPTION_KEY:-development-only-change-this-key}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-}
+      CRON_SECRET: ${CRON_SECRET:-development-maintenance-secret}
+      EMAIL_WEBHOOK_URL: ${EMAIL_WEBHOOK_URL:-}
+      EMAIL_WEBHOOK_SECRET: ${EMAIL_WEBHOOK_SECRET:-}
+      SALES_NOTIFICATION_EMAIL: ${SALES_NOTIFICATION_EMAIL:-}
+      SALES_NOTIFICATION_WEBHOOK_URL: ${SALES_NOTIFICATION_WEBHOOK_URL:-}
+      SLOW_QUERY_MS: ${SLOW_QUERY_MS:-500}
     depends_on:
       db:
         # Waits for Postgres to actually accept connections, not just to start.
@@ -57,6 +66,21 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-supercomputers}
+      POSTGRES_USER: ${POSTGRES_USER:-supercomputers}
+      POSTGRES_DB: ${POSTGRES_DB:-supercomputers}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "while true; do stamp=$$(date -u +%Y%m%dT%H%M%SZ); pg_dump -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -Fc -f /backups/supercomputers-$$stamp.dump && find /backups -name '*.dump' -mtime +$$BACKUP_RETENTION_DAYS -delete; sleep 86400; done"]
 
 volumes:
   pgdata:

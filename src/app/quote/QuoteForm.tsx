@@ -50,10 +50,12 @@ export default function QuoteForm({
     notes: "",
   });
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
 
   // Generated once per mount so the on-screen reference matches the printed one.
-  const [ref_] = useState(makeRef);
+  const [ref_, setRef] = useState(makeRef);
 
   const report = useMemo(() => checkBuild({ lines, target }), [lines, target]);
   const set = <K extends keyof QuoteMeta>(k: K, v: QuoteMeta[K]) => setMeta((m) => ({ ...m, [k]: v }));
@@ -72,45 +74,31 @@ export default function QuoteForm({
     window.print();
   }, []);
 
-  /**
-   * No backend yet, this composes a mail draft carrying the whole request so
-   * nothing is silently dropped while the email-versus-database decision is
-   * still open. Swap for a POST when that is settled.
-   */
-  function submit(e: React.FormEvent<HTMLFormElement>) {
+  /** The server resolves SKUs again and owns compatibility and price totals. */
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const body = [
-      `Requirement reference: ${ref_}`,
-      "",
-      `Name: ${meta.name}`,
-      `Organisation: ${meta.org || "not stated"}`,
-      `Email: ${meta.email}`,
-      `Phone: ${meta.phone || "not stated"}`,
-      `City: ${meta.city || "not stated"}`,
-      `Timeline: ${meta.timeline}`,
-      `Deployment: ${TARGET_LABEL[target]}`,
-      "",
-      `Workload: ${meta.workloads.join(", ") || "not stated"}`,
-      "",
-      `Configuration (${lines.length} lines):`,
-      ...lines.map(
-        (l) => `  ${l.qty}x  ${l.product.brand} ${l.product.model} [${CONDITION_LABEL[l.product.condition]}] ${l.product.id}`
-      ),
-      "",
-      `Peak draw: ${report.summary.power.peakW} W (${report.summary.power.amps230} A at 230V)`,
-      `Rack space: ${report.summary.rackU ? `${report.summary.rackU}U` : "tower"}`,
-      `Compatibility: ${report.errors} blocking, ${report.warns} warnings`,
-      "",
-      "Requirements:",
-      meta.notes || "Nothing added",
-      "",
-      "(Printed requirement document attached separately.)",
-    ].join("\n");
-
-    window.location.href = `mailto:${BRAND.email}?subject=${encodeURIComponent(
-      `Quote request ${ref_}, ${meta.org || meta.name}`
-    )}&body=${encodeURIComponent(body)}`;
-    setSent(true);
+    setSending(true);
+    setSubmitError("");
+    try {
+      const response = await fetch("/api/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact_name: meta.name, contact_email: meta.email, organisation: meta.org,
+          phone: meta.phone, city: meta.city, timeline: meta.timeline, target,
+          workloads: meta.workloads, notes: meta.notes, website: "",
+          lines: lines.map(({ product, qty }) => ({ sku: product.id, qty })),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not submit the request.");
+      setRef(result.reference);
+      setSent(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Could not submit the request.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -200,7 +188,7 @@ export default function QuoteForm({
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <button type="submit" className="btn btn-primary" disabled={!complete}>
-              Send request
+              {sending ? "Sending..." : "Send request"}
             </button>
             <button type="button" onClick={print} className="btn btn-ghost">
               Download PDF
@@ -218,7 +206,8 @@ export default function QuoteForm({
           {!complete && (
             <p className="text-[11.5px] text-ink-3">Name and email are needed before the request can be sent.</p>
           )}
-          {sent && <p className="pill pill-ok">Draft opened, send it and we reply within one working day</p>}
+          {submitError && <p className="text-[12px] text-err">{submitError}</p>}
+          {sent && <p className="pill pill-ok">Request {ref_} received. We will reply within one working day.</p>}
         </form>
 
         {/* ------------------------------------------------------------ rail */}

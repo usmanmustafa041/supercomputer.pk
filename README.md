@@ -4,7 +4,9 @@ A storefront and configurator for refurbished HPC hardware sold in Pakistan: clu
 workstations and every component that goes into them. The interesting part is not the shop, it is the
 compatibility engine behind the configurator.
 
-Next.js 16 (App Router), React 19, Tailwind v4, TypeScript. No database, the catalog is generated.
+Next.js 16 (App Router), React 19, Tailwind v4, TypeScript and PostgreSQL. The
+catalog generator seeds an empty database once; PostgreSQL is the source of
+truth for every public and administrative product read after that.
 
 ```
 npm install
@@ -14,7 +16,8 @@ npm run check        # typecheck + lint + compatibility engine tests
 
 ## How the catalog works
 
-There is no CMS and no product table. `src/lib/catalog/families.ts` and `families-ext.ts` hold roughly 130
+PostgreSQL is the single live product source. The admin product editor writes it and every public catalog,
+product, homepage, system and configurator read comes from it. `src/lib/catalog/families.ts` and `families-ext.ts` hold roughly 130
 hand-authored **families**, one per real part, carrying real vendor specs. `expand.ts` multiplies those into
 2,777 shipping SKUs across three axes that genuinely exist in this market:
 
@@ -90,7 +93,7 @@ Things that bit me, all visible only once rendered:
   the entire build invisible. Position and scale are now declared on the mesh; the frame loop only adds
   the hover lift.
 
-## Inventory and quoting
+## Inventory, customers and commercial workflow
 
 We are the store. Everything comes from our own stock or our own import channel, there is no outbound
 linking to other retailers anywhere on the site. `Availability` on each SKU carries `inHouse`, `leadDays`
@@ -100,11 +103,12 @@ An earlier version resolved to verified Pakistani retailers when we were out of 
 model for this business and the whole `src/lib/sourcing` module, its page, its API route and its
 verification script were removed rather than left dormant.
 
-**Nothing shows a price.** The storefront is quote-only end to end. Price data still exists in the catalog
-layer because the quotation needs it, but it never reaches a screen.
+The public storefront remains quote-led. The configurator shows an indicative running estimate; the server
+revalidates every SKU, compatibility result and commercial total before storing a quote.
 
-`/quote` collects the configuration, the customer and the workload, then produces a **printable A4
-requirement document**, brand header with a `SC-YYYYMMDD-XXXX` reference, the itemised configuration with
+`/quote` collects the configuration, the customer and the workload, then stores a server-authoritative
+request with sequential `SCQ-YYYYMM-NNNNN` numbering. Admin quote and invoice PDFs use `pdf-lib`, can be
+emailed as attachments through the configured webhook, and can be shared on WhatsApp. Documents carry the itemised configuration with
 condition grade and SKU, derived figures (peak draw, current at 230V, heat, rack units, cores, memory,
 BF16), and the full compatibility report with blocking findings separated from warnings.
 
@@ -118,9 +122,64 @@ One trap worth recording: the first print stylesheet hid non-document content wi
 inside the layout, so that rule hid its own wrapper. It now hides with `visibility` and re-reveals by ID,
 which works at any depth.
 
-**There is no backend yet.** Submitting composes a `mailto:` draft carrying the whole request so nothing is
-silently dropped, and the customer prints the PDF alongside it. Swap that for a POST once the
-email-versus-database question is settled.
+Quote requests are stored in PostgreSQL. The browser sends only contact fields,
+SKU and quantity; the server reloads active products, recalculates compatibility
+and totals, snapshots the commercial data, limits abusive submissions and
+deduplicates retries.
+
+`inventory_movements` is the stock authority. Purchases/imports, receipts, quote reservations, releases,
+sales, returns, damage, warranty replacements and manual adjustments are immutable ledger entries. Quote
+reservation locks product rows and checks the derived available balance in one transaction, preventing two
+quotes from reserving the same units. `products.stock_qty` is retained as a compatibility cache and updated
+from ledger actions.
+
+Customers are normalized records with contacts, addresses, tax identifiers, terms, notes, quote and invoice
+history, saved-build slots and support history. Invoice payments are separate records, support partial payment,
+and automatically advance invoice/quote status.
+
+The commercial lifecycle is: New → Reviewing → Quote sent → Accepted → Stock reserved → Invoice issued →
+Partially paid → Paid → Preparing → Delivered. Cancelled/lost states retain their records and audit history.
+
+## Database migrations
+
+`src/lib/db/migrations` contains timestamped forward SQL files and matching `.down.sql` rollback files.
+`schema_migrations` records exactly what was applied. Startup takes a PostgreSQL advisory lock, baselines an
+existing legacy database once, then transactionally applies each pending migration. It no longer reapplies the
+large legacy schema on every boot.
+
+```powershell
+npm run db:rollback       # roll back the most recent non-baseline migration
+```
+
+Always take and restore-test a backup before a production rollback.
+
+## Deployment, monitoring and recovery
+
+Production requires strong `ADMIN_PASSWORD`, `AUTH_ENCRYPTION_KEY`, `CRON_SECRET`, database credentials,
+`APP_URL=https://...`, and an email webhook. See `.env.example`. Run `docker compose up -d --build`; the web
+health endpoint reports product count, migration count, database size and negative inventory anomalies.
+
+Every response receives an `x-correlation-id`; structured request and slow-query events go to container logs.
+Forward those logs to your error/logging provider and alert on `slow_query`, HTTP 5xx and health-check failures.
+Security headers include CSP, frame denial, MIME sniffing protection, referrer and permissions policies.
+Optional analytics sends only the pathname and site identifier, respects Do Not Track and is disabled unless
+`NEXT_PUBLIC_ANALYTICS_URL` is configured.
+
+The Compose `backup` service creates a compressed `pg_dump` every 24 hours in `./backups` and deletes files
+older than `BACKUP_RETENTION_DAYS`. Copy backups to encrypted off-site object storage; a local directory alone
+is not disaster recovery. Test a backup with:
+
+```powershell
+npm run backup:restore-test -- -BackupFile .\backups\supercomputers-YYYYMMDDTHHMMSSZ.dump
+```
+
+The restore test starts an isolated temporary PostgreSQL container, restores the dump and checks migrations and
+product rows. Schedule it at least monthly. Monitor database/storage utilization outside the app through your
+host or cloud provider. Call `/api/maintenance/sessions` and `/api/maintenance/quote-reminders` with
+`Authorization: Bearer $CRON_SECRET` from a trusted scheduler.
+
+GitHub Actions runs type checking, lint, compatibility/preset tests and a production build against PostgreSQL
+on every push and pull request.
 
 ## Themes
 
@@ -135,7 +194,8 @@ photo negatives of the dark versions.
 
 ## Imagery
 
-There are no photographs. `src/components/art/PartArt.tsx` draws each part as a technical elevation from
+Products support object-storage URLs for main/gallery, serial, condition, packaging images and inspection
+video, with mandatory alt text. When photography is absent, `src/components/art/PartArt.tsx` draws each part as a technical elevation from
 its own spec fields, a 267mm dual-slot passive card is drawn 267mm long, dual-slot and finned, with its
 actual power connectors. Hotlinking retailer photography would be legally questionable and visually
 incoherent; you get four lighting setups in one grid. This way 2,777 SKUs share one camera, one line
@@ -158,16 +218,19 @@ DevTools-protocol console capture across the home page, catalog, systems and the
 driving the target buttons): zero console errors, zero exceptions, zero hydration warnings once extensions
 are out of the picture. The alternative is excluding `localhost` in the extension's own settings.
 
-## What is not done
+## External services still required
 
-- **No backend.** The quote form composes a `mailto:` draft. There is no CRM, no order pipeline, no
-  payments. That is deliberate for this domain, nobody Stripe-checkouts a PKR 1.5 crore cluster, but a
-  real quote pipeline is the obvious next piece.
+- Payment records and partial reconciliation exist, but there is no card/payment gateway. Admins record bank,
+  cheque, card-terminal or cash receipts.
+- Email and Slack/Teams-compatible notifications require webhook providers configured in environment variables.
+- Uptime, error tracking, off-site backup storage and host/database capacity alerts must be configured with the
+  selected production hosting providers; the app exposes health, correlation and structured log signals for them.
 - **`FX_USD_PKR` is a hardcoded constant** in `expand.ts`. Every price derives from it, so the whole
   catalog reprices from one line, but nothing updates it automatically.
 - **Landed-cost multipliers are estimates.** 1.34 for components, 1.28 for systems. Somebody who actually
   clears shipments should replace these with real numbers.
-- **Stock levels are generated,** seeded off the SKU id. There is no inventory system behind them.
+- Initial stock levels are generated and imported as opening ledger balances. All later changes should be posted
+  through the inventory ledger.
 - **The rules only check that a machine will assemble, boot and stay inside its electrical and thermal
   envelope.** They cannot tell you it is the right machine. Four 16GB cards and one 64GB card both pass
   every check; only one holds the model you are training.
@@ -179,7 +242,7 @@ are out of the picture. The alternative is excluding `localhost` in the extensio
 ```
 src/lib/catalog/     families, expansion, query and formatting
 src/lib/compat/      the rule engine and build summary
-src/lib/sourcing/    retailer registry, resolution, optional live lookup
+src/lib/db/          PostgreSQL access, timestamped migrations, inventory, CRM and commercial records
 src/components/art/  procedural part drawings
 src/app/configure/   configurator, part picker, presets
 scripts/             catalog stats, engine tests, registry verification

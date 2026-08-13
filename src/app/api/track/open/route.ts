@@ -1,0 +1,3 @@
+import{query}from"@/lib/db/client";import{validTrackingToken}from"@/lib/tracking";
+const pixel=Buffer.from("R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==","base64");
+export async function GET(request:Request){const sp=new URL(request.url).searchParams;const type=sp.get("type")??"";const id=sp.get("id")??"";const token=sp.get("token")??"";if(validTrackingToken(type,id,token)){if(type==="quote")await query("UPDATE quotes SET opened_at=COALESCE(opened_at,now()) WHERE reference=$1",[id]);if(type==="invoice")await query("UPDATE invoices SET opened_at=COALESCE(opened_at,now()) WHERE invoice_number=$1",[id]);}return new Response(pixel,{headers:{"content-type":"image/gif","cache-control":"no-store, private"}});}

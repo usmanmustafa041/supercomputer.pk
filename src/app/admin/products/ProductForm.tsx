@@ -232,6 +232,19 @@ export default function ProductForm({ product }: { product?: ProductRow }) {
           />
           <span className="text-[12px] text-ink-3">One per line. Used for filtering the catalog.</span>
         </label>
+        <label className="grid gap-1.5">
+          <span className="t-label">Product photography and inspection media</span>
+          <textarea
+            name="media"
+            rows={7}
+            defaultValue={(product?.media ?? []).map((item) => `${item.role} | ${item.url} | ${item.alt}`).join("\n")}
+            placeholder="main | https://cdn.example.com/sku/front.webp | Front view of the workstation"
+            className="field h-auto py-2 leading-relaxed t-data text-[12px]"
+          />
+          <span className="text-[12px] text-ink-3 leading-relaxed">
+            One per line: role | object-storage URL | alt text. Roles: main, gallery, serial, condition, packaging, inspection. Files stay in object storage; PostgreSQL stores only these URLs and descriptions.
+          </span>
+        </label>
       </section>
 
       {/* Pinned on a phone, so Save is always in reach however long the

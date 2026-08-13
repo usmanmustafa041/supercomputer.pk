@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CONDITION_LABEL, CONDITION_NOTE, allProducts, type Condition } from "@/lib/catalog";
+import { CONDITION_LABEL, CONDITION_NOTE, type Condition } from "@/lib/catalog";
+import { publicProducts } from "@/lib/db/catalog";
 
 export const metadata: Metadata = {
   title: "What the condition grades mean",
@@ -48,8 +49,8 @@ const DETAIL: Record<Condition, { test: string; warranty: string; buy: string; a
 
 const ORDER: Condition[] = ["new", "open-box", "recertified", "refurb-a", "refurb-b", "pull"];
 
-export default function GradingPage() {
-  const all = allProducts();
+export default async function GradingPage() {
+  const all = await publicProducts();
   const counts = new Map<Condition, number>();
   for (const p of all) counts.set(p.condition, (counts.get(p.condition) ?? 0) + 1);
 
